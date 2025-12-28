@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Warm sand/beige background - softer and more inviting */
+    --background: 40 25% 94%;
+    --foreground: 220 25% 18%;
+
+    /* Warmer card surfaces with more depth */
+    --card: 42 30% 96%;
+    --card-foreground: 220 25% 18%;
+
+    --popover: 42 30% 96%;
+    --popover-foreground: 220 25% 18%;
+
+    /* Rich teal primary - deeper and more saturated */
+    --primary: 175 75% 32%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Warm terracotta secondary */
+    --secondary: 16 85% 52%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Warm muted tones - earthier */
+    --muted: 38 22% 88%;
+    --muted-foreground: 220 18% 35%;
+
+    /* Deep ocean accent */
+    --accent: 200 80% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Warm subtle borders */
+    --border: 38 18% 80%;
+    --input: 38 18% 80%;
+    --ring: 175 75% 32%;
+
+    --radius: 0.75rem;
+
+    /* Travel-inspired gradients - richer and more vibrant */
+    --gradient-ocean: linear-gradient(135deg, hsl(175, 75%, 32%) 0%, hsl(200, 80%, 42%) 100%);
+    --gradient-sunset: linear-gradient(135deg, hsl(16, 85%, 52%) 0%, hsl(38, 90%, 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(175, 75%, 32%) 0%, hsl(200, 80%, 42%) 50%, hsl(16, 85%, 52%) 100%);
+    
+    /* Warmer, more refined shadows */
+    --shadow-elegant: 0 10px 40px -10px hsl(175 75% 32% / 0.3);
+    --shadow-card: 0 4px 24px -4px hsl(38 25% 25% / 0.15);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 220 22% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 220 22% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 180 65% 55%;
+    --primary-foreground: 220 25% 8%;
+
+    --secondary: 15 85% 60%;
+    --secondary-foreground: 220 25% 8%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 210 15% 65%;
+
+    --accent: 210 80% 55%;
+    --accent-foreground: 220 25% 8%;
+
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 210 20% 95%;
+
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 180 65% 55%;
+
+    /* Dark mode gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(180, 65%, 55%) 0%, hsl(210, 80%, 55%) 100%);
+    --gradient-sunset: linear-gradient(135deg, hsl(15, 85%, 60%) 0%, hsl(35, 90%, 55%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(180, 65%, 55%) 0%, hsl(210, 80%, 55%) 50%, hsl(15, 85%, 60%) 100%);
+    
+    /* Dark shadows */
+    --shadow-elegant: 0 10px 40px -10px hsl(180 65% 55% / 0.4);
+    --shadow-card: 0 4px 20px -2px hsl(0 0% 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

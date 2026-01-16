@@ -1,8 +1,27 @@
+import { useState, useEffect } from "react";
 import { Star, Youtube, Instagram, Twitter, Facebook } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FaTiktok, FaPinterest } from "react-icons/fa";
+import { supabase } from "@/lib/supabase";
 
 const Footer = () => {
+  const [reviewStats, setReviewStats] = useState({ rating: 4.8, count: 2450 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { data } = await supabase.from('app_reviews').select('rating');
+      const reviews = data as { rating: number }[] | null;
+      if (reviews && reviews.length > 0) {
+        const avg = reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length;
+        setReviewStats({
+          rating: Number(avg.toFixed(1)),
+          count: reviews.length
+        });
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <footer className="border-t bg-card mt-auto">
       <div className="container mx-auto px-4 py-8">
@@ -15,10 +34,13 @@ const Footer = () => {
             <div className="flex items-center gap-2 mt-3">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <Star
+                    key={star}
+                    className={`h-3 w-3 ${star <= Math.round(reviewStats.rating) ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted"}`}
+                  />
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground">4.8 (2,450 reviews)</span>
+              <span className="text-xs text-muted-foreground">{reviewStats.rating} ({reviewStats.count} reviews)</span>
             </div>
           </div>
 
@@ -67,7 +89,7 @@ const Footer = () => {
           <div>
             <h3 className="font-bold mb-3 text-sm">Follow Us</h3>
             <div className="flex flex-wrap gap-2">
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" 
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
                 <Youtube className="h-4 w-4" />
               </a>

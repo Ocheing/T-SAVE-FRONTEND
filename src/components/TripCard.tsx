@@ -2,6 +2,7 @@ import { MapPin, Calendar, TrendingUp } from "lucide-react";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Button } from "./ui/button";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface TripCardProps {
   destination: string;
@@ -9,16 +10,19 @@ interface TripCardProps {
   savedAmount: number;
   targetDate: string;
   image: string;
+  id?: string;
+  status?: string;
 }
 
 const TripCard = ({ destination, targetAmount, savedAmount, targetDate, image }: TripCardProps) => {
   const progress = (savedAmount / targetAmount) * 100;
+  const { formatPrice } = useCurrency();
 
   return (
     <Card className="overflow-hidden group hover:shadow-[var(--shadow-elegant)] transition-all duration-300 hover:-translate-y-1">
       <div className="relative h-48 overflow-hidden">
-        <img 
-          src={image} 
+        <img
+          src={image}
           alt={destination}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -43,11 +47,11 @@ const TripCard = ({ destination, targetAmount, savedAmount, targetDate, image }:
         <div className="flex justify-between items-center">
           <div>
             <p className="text-sm text-muted-foreground">Saved</p>
-            <p className="text-2xl font-bold text-primary">${savedAmount.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-primary">{formatPrice(savedAmount)}</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">Goal</p>
-            <p className="text-xl font-semibold">${targetAmount.toLocaleString()}</p>
+            <p className="text-xl font-semibold">{formatPrice(targetAmount)}</p>
           </div>
         </div>
 

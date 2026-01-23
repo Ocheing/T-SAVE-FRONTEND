@@ -56,8 +56,8 @@ export function AdminHeader() {
                                 </p>
                                 <div className="flex items-center mt-1">
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isSuperAdmin
-                                            ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                                            : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+                                        : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                                         }`}>
                                         {isSuperAdmin ? 'Super Admin' : 'Admin'}
                                     </span>

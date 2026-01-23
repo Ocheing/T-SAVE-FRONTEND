@@ -81,7 +81,12 @@ interface PaymentMethod {
   id: string;
   type: 'mpesa' | 'card' | 'bank';
   name: string;
-  details: any;
+  details: {
+    phone?: string;
+    cardNumber?: string;
+    bankName?: string;
+    accountNumber?: string;
+  };
   is_default: boolean;
 }
 
@@ -189,10 +194,11 @@ const Profile = () => {
         title: "Profile updated",
         description: "Your changes have been saved successfully.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update profile. Please try again.";
       toast({
         title: "Update failed",
-        description: error.message || "Failed to update profile. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

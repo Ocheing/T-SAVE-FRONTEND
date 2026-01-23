@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const TripBooking = () => {
   const [activeTab, setActiveTab] = useState("upcoming");
 
-  const upcomingBookings: any[] = []; // Empty for demo
-  const pastBookings: any[] = []; // Empty for demo
+  const upcomingBookings: { id: string; destination: string }[] = []; // Empty for demo
+  const pastBookings: { id: string; destination: string }[] = []; // Empty for demo
 
   return (
     <div className="min-h-screen py-6">

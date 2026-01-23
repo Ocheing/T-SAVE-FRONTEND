@@ -8,93 +8,80 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Warm sand/beige background - softer and more inviting */
-    --background: 40 25% 94%;
-    --foreground: 220 25% 18%;
+    /* DEFAULT TO DARK MODE VALUES (Even in :root to prevent flash) */
+    --background: 222 47% 11%;     /* Deep rich blue-black */
+    --foreground: 210 40% 98%;
 
-    /* Warmer card surfaces with more depth */
-    --card: 42 30% 96%;
-    --card-foreground: 220 25% 18%;
+    --card: 217 33% 17%;           /* Slightly lighter dark blue for cards */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 42 30% 96%;
-    --popover-foreground: 220 25% 18%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
 
-    /* Rich teal primary - deeper and more saturated */
-    --primary: 175 75% 32%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 186 100% 41%;       /* Vibrant CYAN/TEAL */
+    --primary-foreground: 222 47% 11%;
 
-    /* Warm terracotta secondary */
-    --secondary: 16 85% 52%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 217 33% 25%;
+    --secondary-foreground: 210 40% 98%;
 
-    /* Warm muted tones - earthier */
-    --muted: 38 22% 88%;
-    --muted-foreground: 220 18% 35%;
+    --muted: 217 33% 20%;
+    --muted-foreground: 215 20% 65%;
 
-    /* Deep ocean accent */
-    --accent: 200 80% 42%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 186 100% 41%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Warm subtle borders */
-    --border: 38 18% 80%;
-    --input: 38 18% 80%;
-    --ring: 175 75% 32%;
+    --border: 217 33% 25%;
+    --input: 217 33% 22%;
+    --ring: 186 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Travel-inspired gradients - richer and more vibrant */
-    --gradient-ocean: linear-gradient(135deg, hsl(175, 75%, 32%) 0%, hsl(200, 80%, 42%) 100%);
-    --gradient-sunset: linear-gradient(135deg, hsl(16, 85%, 52%) 0%, hsl(38, 90%, 50%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(175, 75%, 32%) 0%, hsl(200, 80%, 42%) 50%, hsl(16, 85%, 52%) 100%);
+    /* Vibrant Gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(186, 100%, 41%) 0%, hsl(210, 100%, 50%) 100%);
+    --gradient-sunset: linear-gradient(135deg, hsl(320, 100%, 60%) 0%, hsl(260, 100%, 65%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(186, 100%, 35%) 0%, hsl(220, 80%, 30%) 50%, hsl(280, 70%, 30%) 100%);
     
-    /* Warmer, more refined shadows */
-    --shadow-elegant: 0 10px 40px -10px hsl(175 75% 32% / 0.3);
-    --shadow-card: 0 4px 24px -4px hsl(38 25% 25% / 0.15);
+    /* Glassmorphism & Shadows */
+    --shadow-elegant: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
     
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Force dark mode overrides explicitly to be safe */
   .dark {
-    --background: 220 25% 8%;
-    --foreground: 210 20% 95%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 220 22% 12%;
-    --card-foreground: 210 20% 95%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 220 22% 12%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 180 65% 55%;
-    --primary-foreground: 220 25% 8%;
+    --primary: 186 100% 45%;      
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 15 85% 60%;
-    --secondary-foreground: 220 25% 8%;
+    --secondary: 217 33% 25%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 20% 18%;
-    --muted-foreground: 210 15% 65%;
+    --muted: 217 33% 20%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 210 80% 55%;
-    --accent-foreground: 220 25% 8%;
+    --accent: 186 100% 41%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 210 20% 95%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 220 20% 18%;
-    --input: 220 20% 18%;
-    --ring: 180 65% 55%;
-
-    /* Dark mode gradients */
-    --gradient-ocean: linear-gradient(135deg, hsl(180, 65%, 55%) 0%, hsl(210, 80%, 55%) 100%);
-    --gradient-sunset: linear-gradient(135deg, hsl(15, 85%, 60%) 0%, hsl(35, 90%, 55%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(180, 65%, 55%) 0%, hsl(210, 80%, 55%) 50%, hsl(15, 85%, 60%) 100%);
-    
-    /* Dark shadows */
-    --shadow-elegant: 0 10px 40px -10px hsl(180 65% 55% / 0.4);
-    --shadow-card: 0 4px 20px -2px hsl(0 0% 0% / 0.4);
+    --border: 217 33% 25%;
+    --input: 217 33% 22%;
+    --ring: 186 100% 50%;
   }
 }
 
@@ -105,5 +92,36 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+@layer components {
+  /* Premium Glass Effect */
+  .glass {
+    @apply bg-black/40 backdrop-blur-md border border-white/10 shadow-xl;
+  }
+  
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-white/5 shadow-lg hover:shadow-cyan-500/10 hover:border-primary/30 transition-all duration-300;
+  }
+}
+
+/* Custom Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out forwards;
 }

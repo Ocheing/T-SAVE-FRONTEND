@@ -34,6 +34,7 @@ export function useAddToWishlist() {
             if (!user) throw new Error('Not authenticated');
 
             const { data, error } = await (supabase
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .from('wishlist') as any)
                 .insert({ ...item, user_id: user.id })
                 .select()
@@ -54,6 +55,7 @@ export function useUpdateWishlistItem() {
     return useMutation({
         mutationFn: async ({ id, updates }: { id: string; updates: WishlistItemUpdate }) => {
             const { data, error } = await (supabase
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .from('wishlist') as any)
                 .update(updates)
                 .eq('id', id)

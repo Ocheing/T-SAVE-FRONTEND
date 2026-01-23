@@ -24,6 +24,17 @@ const PopularDestinations = () => {
           <div className="flex justify-center py-20">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </div>
+        ) : !destinations || destinations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <MapPin className="h-16 w-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Popular Destinations Yet</h3>
+            <p className="text-muted-foreground text-sm mb-4 max-w-md">
+              We're gathering the most loved travel destinations. Check back soon or explore our featured picks!
+            </p>
+            <Button variant="outline" onClick={() => navigate('/featured-destinations')}>
+              Explore Featured Destinations
+            </Button>
+          </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {destinations?.map((dest, index) => (

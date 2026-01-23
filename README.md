@@ -1,73 +1,129 @@
-# Welcome to your Lovable project
+# TembeaSave - Travel Savings Application
 
-## Project info
+A modern travel savings web application built with React, TypeScript, and Supabase.
 
-**URL**: https://lovable.dev/projects/b66a9ef5-9759-4407-b0b4-fa1f5c0e4a28
+## 🏗 Architecture
 
-## How can I edit this code?
+This is a **single-page application (SPA)** that serves both **user** and **admin** interfaces from the same codebase:
 
-There are several ways of editing your application.
+- **User Interface**: `http://localhost:8080/` → Dashboard, Trips, Wishlist, etc.
+- **Admin Interface**: `http://localhost:8080/admin` → Admin Dashboard, User Management, etc.
 
-**Use Lovable**
+> ⚠️ **Important**: There are NO separate ports for admin and user. Both interfaces run on the same port (8080) as part of the same Vite development server.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b66a9ef5-9759-4407-b0b4-fa1f5c0e4a28) and start prompting.
+## 🚀 Quick Start
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
+- Node.js 18+ 
+- npm or bun
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
+cd T-SAVE-FRONTEND
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📜 Available Scripts
 
-**Use GitHub Codespaces**
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server on port 8080 |
+| `npm run dev:user` | Alias for `npm run dev` (same port) |
+| `npm run dev:admin` | Alias for `npm run dev` (same port) |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build on port 4173 |
+| `npm run lint` | Run ESLint |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔐 Authentication & Roles
 
-## What technologies are used for this project?
+The app uses Supabase Auth with role-based access:
 
-This project is built with:
+| Role | Access | Redirect After Login |
+|------|--------|---------------------|
+| Regular User | User dashboard, trips, profile | `/dashboard` |
+| Admin | Admin panel + user features | `/admin` |
+| Super Admin | Full admin access | `/admin` |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Setting Up Admin Users
 
-## How can I deploy this project?
+1. Create a user account normally through `/auth`
+2. Add their UUID to the `admin_users` table in Supabase:
 
-Simply open [Lovable](https://lovable.dev/projects/b66a9ef5-9759-4407-b0b4-fa1f5c0e4a28) and click on Share -> Publish.
+```sql
+INSERT INTO public.admin_users (id, role) 
+VALUES ('your-user-uuid', 'admin');
+-- or 'super_admin' for full access
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 🗂 Project Structure
 
-Yes, you can!
+```
+src/
+├── admin/                # Admin-specific components and pages
+│   ├── components/       # AdminLayout, Sidebar, Header
+│   └── pages/           # Dashboard, Users, Destinations, etc.
+├── components/          # Shared UI components
+├── contexts/            # React Context providers (Auth, Currency)
+├── hooks/               # Custom React hooks
+├── lib/                 # Utilities and Supabase client
+├── pages/               # User-facing pages
+└── types/               # TypeScript type definitions
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔧 Environment Variables
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Create a `.env` file with:
+
+```env
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_GEMINI_API_KEY=your-gemini-key
+```
+
+## 🛠 Tech Stack
+
+- **Framework**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth (Email + Google OAuth)
+- **State Management**: React Query + Context API
+- **Routing**: React Router v6
+
+## 📱 Routes
+
+### Public Routes
+- `/` - Home page
+- `/trips` - Browse trips
+- `/popular-destinations` - Popular destinations
+- `/featured-destinations` - Featured destinations
+- `/auth` - Login/Signup (unified for all users)
+
+### Protected User Routes
+- `/dashboard` - User dashboard
+- `/profile` - User profile
+- `/wishlist` - Saved destinations
+- `/bookings` - Trip bookings
+- `/transactions` - Transaction history
+- `/chat` - AI Travel Assistant
+
+### Admin Routes (requires admin role)
+- `/admin` - Admin dashboard
+- `/admin/users` - User management
+- `/admin/destinations` - Destination management
+- `/admin/analytics` - Platform analytics
+- `/admin/settings` - Admin settings
+
+## 📄 License
+
+This project is private and proprietary.

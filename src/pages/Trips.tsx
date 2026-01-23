@@ -8,12 +8,15 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useDestinations } from "@/hooks/useDestinations";
 import heroBeach from "@/assets/hero-beach.jpg";
+import { useTranslation } from "react-i18next";
+import type { Destination } from "@/types/database.types";
 
 const Trips = () => {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const navigate = useNavigate();
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const query = searchParams.get("q");
@@ -32,7 +35,7 @@ const Trips = () => {
   const featuredDestinations = (allDestinations || []).filter(d => d.is_featured).slice(0, 2);
   const popularDestinations = (allDestinations || []).filter(d => d.is_popular).slice(0, 3);
 
-  const handleStartSaving = (destination: any) => {
+  const handleStartSaving = (destination: Destination) => {
     navigate('/travel-goals', { state: { destination: destination } });
   };
 
@@ -41,8 +44,8 @@ const Trips = () => {
       <div className="container mx-auto px-4">
         <div className="mb-6 animate-fade-in flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Explore Destinations</h1>
-            <p className="text-sm text-muted-foreground">Find your next adventure and start saving</p>
+            <h1 className="text-3xl font-bold mb-1">{t('trips.browseTrips')}</h1>
+            <p className="text-sm text-muted-foreground">{t('trips.exploreDesc', 'Find your next adventure and start saving')}</p>
           </div>
           <div className="flex gap-2">
             <Link to="/wishlist">
@@ -57,7 +60,7 @@ const Trips = () => {
           <div className="relative max-w-2xl">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Search destinations or categories..."
+              placeholder={t('common.search') + "..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 h-12"
@@ -77,7 +80,7 @@ const Trips = () => {
               ))
             ) : (
               <div className="col-span-3 text-center py-20 bg-muted/30 rounded-2xl border-2 border-dashed">
-                <p className="text-muted-foreground">No destinations found matching "{searchQuery}"</p>
+                <p className="text-muted-foreground">{t('common.noData')} "{searchQuery}"</p>
               </div>
             )}
           </div>
@@ -87,7 +90,7 @@ const Trips = () => {
             {featuredDestinations.length > 0 && (
               <section>
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">Featured Destinations</h2>
+                  <h2 className="text-xl font-bold">{t('trips.featured')}</h2>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   {featuredDestinations.map((dest, index) => (
@@ -103,7 +106,7 @@ const Trips = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       <div className="absolute top-4 right-4">
-                        <Badge className="bg-primary text-white border-none shadow-lg">Featured</Badge>
+                        <Badge className="bg-primary text-white border-none shadow-lg">{t('trips.featured')}</Badge>
                       </div>
                       <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
                         <div className="text-white">
@@ -113,7 +116,7 @@ const Trips = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] uppercase font-bold text-white/60 mb-0.5">Starting from</p>
+                          <p className="text-[10px] uppercase font-bold text-white/60 mb-0.5">{t('trips.from')}</p>
                           <Badge className="bg-white text-primary text-lg font-black h-8">{formatPrice(Number(dest.estimated_cost))}</Badge>
                         </div>
                       </div>
@@ -126,7 +129,7 @@ const Trips = () => {
             {/* Popular Section */}
             {popularDestinations.length > 0 && (
               <section>
-                <h2 className="text-xl font-bold mb-4">Popular Choices</h2>
+                <h2 className="text-xl font-bold mb-4">{t('trips.popular')}</h2>
                 <div className="grid md:grid-cols-3 gap-6">
                   {popularDestinations.map((dest, index) => (
                     <DestinationCard key={index} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
@@ -137,7 +140,7 @@ const Trips = () => {
 
             {/* All Section */}
             <section>
-              <h2 className="text-xl font-bold mb-4">All Destinations</h2>
+              <h2 className="text-xl font-bold mb-4">{t('trips.allDestinations')}</h2>
               <div className="grid md:grid-cols-3 gap-6">
                 {(allDestinations || []).map((dest, index) => (
                   <DestinationCard key={index} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
@@ -151,8 +154,9 @@ const Trips = () => {
   );
 };
 
-const DestinationCard = ({ destination, onStartSaving }: { destination: any, onStartSaving: () => void }) => {
+const DestinationCard = ({ destination, onStartSaving }: { destination: Destination, onStartSaving: () => void }) => {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   return (
     <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-primary/10">
       <div className="relative h-44 overflow-hidden">
@@ -193,7 +197,7 @@ const DestinationCard = ({ destination, onStartSaving }: { destination: any, onS
         </p>
         <div className="flex justify-between items-center pt-3 border-t">
           <div>
-            <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">Budget</p>
+            <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">{t('wishlist.estimatedCost')}</p>
             <p className="text-base font-black text-primary">{formatPrice(Number(destination.estimated_cost))}</p>
           </div>
           <Button
@@ -202,7 +206,7 @@ const DestinationCard = ({ destination, onStartSaving }: { destination: any, onS
             className="h-8 text-xs"
             onClick={onStartSaving}
           >
-            Start Saving
+            {t('trips.startSaving')}
           </Button>
         </div>
       </div>

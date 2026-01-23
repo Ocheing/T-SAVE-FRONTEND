@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useWishlist, useRemoveFromWishlist } from "@/hooks/useWishlist";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
 import heroBeach from "@/assets/hero-beach.jpg";
 import mountainAdventure from "@/assets/mountain-adventure.jpg";
 import savingsTravel from "@/assets/savings-travel.jpg";
@@ -13,6 +15,8 @@ const Wishlist = () => {
   const { data: wishlistItems, isLoading } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
 
   const getImageForCategory = (category: string | null) => {
     switch (category) {
@@ -26,13 +30,14 @@ const Wishlist = () => {
     try {
       await removeFromWishlist.mutateAsync(id);
       toast({
-        title: "Removed from wishlist",
-        description: `${destination} has been removed from your wishlist.`,
+        title: t('messages.removedFromWishlist'),
+        description: `${destination} ${t('messages.removedFromWishlist').toLowerCase()}.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : t('messages.somethingWentWrong');
       toast({
-        title: "Error",
-        description: error.message || "Failed to remove item from wishlist.",
+        title: t('common.error'),
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -52,27 +57,27 @@ const Wishlist = () => {
         {/* My Wishlist Section */}
         <div className="mb-12">
           <div className="mb-4 animate-fade-in">
-            <h1 className="text-2xl font-bold mb-1">My Wishlist</h1>
-            <p className="text-sm text-muted-foreground">Save your favorite destinations for later</p>
+            <h1 className="text-2xl font-bold mb-1">{t('wishlist.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('wishlist.subtitle')}</p>
           </div>
 
           {!wishlistItems || wishlistItems.length === 0 ? (
             <Card className="p-16 text-center animate-fade-in">
               <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-xl font-bold mb-2">Nothing here yet</h2>
+              <h2 className="text-xl font-bold mb-2">{t('wishlist.emptyWishlist')}</h2>
               <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-                Select the heart icon to save and categorize experiences you liked.
+                {t('wishlist.exploreDestinations')}
               </p>
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                 <Link to="/trips">
                   <Button variant="hero" size="sm" className="text-xs sm:text-sm w-full sm:w-auto">
                     <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    Start a New Wishlist
+                    {t('common.create')}
                   </Button>
                 </Link>
                 <Link to="/trips">
                   <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full sm:w-auto">
-                    Explore Experiences
+                    {t('wishlist.exploreDestinations')}
                   </Button>
                 </Link>
               </div>
@@ -124,7 +129,7 @@ const Wishlist = () => {
                       {item.estimated_cost && (
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3 w-3 text-primary" />
-                          <span className="font-semibold">${item.estimated_cost.toLocaleString()}</span>
+                          <span className="font-semibold">{formatPrice(Number(item.estimated_cost))}</span>
                         </div>
                       )}
                       {item.duration && (
@@ -140,7 +145,7 @@ const Wishlist = () => {
 
                     <Link to="/travel-goals">
                       <Button className="w-full" variant="hero" size="sm">
-                        Start Saving for This Trip
+                        {t('wishlist.startSaving')}
                       </Button>
                     </Link>
                   </div>
@@ -156,7 +161,7 @@ const Wishlist = () => {
             <Link to="/trips">
               <Button variant="outline" size="lg">
                 <Eye className="h-5 w-5 mr-2" />
-                Discover More Destinations
+                {t('wishlist.exploreDestinations')}
               </Button>
             </Link>
           </div>

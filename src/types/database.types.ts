@@ -116,6 +116,14 @@ export type Database = {
                     reviews_count: number | null
                     created_at: string | null
                     updated_at: string | null
+                    // Savings goal enhancements
+                    destination_id: string | null
+                    is_custom_goal: boolean | null
+                    savings_frequency: 'daily' | 'weekly' | 'monthly' | null
+                    daily_target: number | null
+                    weekly_target: number | null
+                    monthly_target: number | null
+                    location: string | null
                 }
                 Insert: {
                     id?: string
@@ -135,6 +143,14 @@ export type Database = {
                     reviews_count?: number | null
                     created_at?: string | null
                     updated_at?: string | null
+                    // Savings goal enhancements
+                    destination_id?: string | null
+                    is_custom_goal?: boolean | null
+                    savings_frequency?: 'daily' | 'weekly' | 'monthly' | null
+                    daily_target?: number | null
+                    weekly_target?: number | null
+                    monthly_target?: number | null
+                    location?: string | null
                 }
                 Update: {
                     id?: string
@@ -154,6 +170,14 @@ export type Database = {
                     reviews_count?: number | null
                     created_at?: string | null
                     updated_at?: string | null
+                    // Savings goal enhancements
+                    destination_id?: string | null
+                    is_custom_goal?: boolean | null
+                    savings_frequency?: 'daily' | 'weekly' | 'monthly' | null
+                    daily_target?: number | null
+                    weekly_target?: number | null
+                    monthly_target?: number | null
+                    location?: string | null
                 }
             }
             wishlist: {
@@ -247,6 +271,7 @@ export type Database = {
                     is_featured: boolean | null
                     is_popular: boolean | null
                     popularity_badge: string | null
+                    status: 'draft' | 'published' | 'archived' | null
                     created_at: string | null
                     updated_at: string | null
                 }
@@ -264,6 +289,7 @@ export type Database = {
                     is_featured?: boolean | null
                     is_popular?: boolean | null
                     popularity_badge?: string | null
+                    status?: 'draft' | 'published' | 'archived' | null
                     created_at?: string | null
                     updated_at?: string | null
                 }
@@ -281,6 +307,7 @@ export type Database = {
                     is_featured?: boolean | null
                     is_popular?: boolean | null
                     popularity_badge?: string | null
+                    status?: 'draft' | 'published' | 'archived' | null
                     created_at?: string | null
                     updated_at?: string | null
                 }
@@ -335,6 +362,26 @@ export type Database = {
                     updated_at?: string | null
                 }
             }
+            admin_users: {
+                Row: {
+                    id: string
+                    role: 'admin' | 'super_admin'
+                    created_at: string | null
+                    updated_at: string | null
+                }
+                Insert: {
+                    id: string
+                    role?: 'admin' | 'super_admin'
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    role?: 'admin' | 'super_admin'
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+            }
         }
         Views: {
             [_ in never]: never
@@ -343,7 +390,7 @@ export type Database = {
             [_ in never]: never
         }
         Enums: {
-            [_ in never]: never
+            admin_role: 'admin' | 'super_admin'
         }
     }
 }
@@ -385,3 +432,6 @@ export type TripStatus = 'active' | 'completed' | 'cancelled'
 export type TransactionType = 'deposit' | 'withdrawal' | 'booking_payment' | 'refund'
 export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'cancelled'
 export type PaymentMethodType = 'mpesa' | 'card' | 'bank'
+export type SavingsFrequency = 'daily' | 'weekly' | 'monthly'
+export type AdminUser = Database['public']['Tables']['admin_users']['Row']
+export type AdminRole = Database['public']['Enums']['admin_role']

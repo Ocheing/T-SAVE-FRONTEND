@@ -29,6 +29,22 @@ create table if not exists public.profiles (
 create index if not exists profiles_email_idx on public.profiles(email);
 
 -- =============================================================================
+-- 1.5 ADMIN USERS TABLE (New!)
+-- Stores which users have admin privileges
+-- =============================================================================
+create table if not exists public.admin_users (
+  id uuid references auth.users on delete cascade primary key,
+  role text not null default 'admin' check (role in ('admin', 'super_admin')),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.admin_users enable row level security;
+
+create policy "Admins can view own role"
+  on public.admin_users for select using (auth.uid() = id);
+
+-- =============================================================================
 -- 2. PAYMENT METHODS TABLE
 -- Stores user's payment methods (M-Pesa, Card, Bank)
 -- =============================================================================
@@ -93,7 +109,6 @@ create table if not exists public.wishlist (
   created_at timestamptz default now()
 );
 
--- Create index for faster user lookups
 create index if not exists wishlist_user_id_idx on public.wishlist(user_id);
 
 -- =============================================================================
@@ -112,7 +127,6 @@ create table if not exists public.transactions (
   created_at timestamptz default now()
 );
 
--- Create indexes for faster queries
 create index if not exists transactions_user_id_idx on public.transactions(user_id);
 create index if not exists transactions_trip_id_idx on public.transactions(trip_id);
 create index if not exists transactions_created_at_idx on public.transactions(created_at desc);
@@ -129,19 +143,30 @@ alter table public.trips enable row level security;
 alter table public.wishlist enable row level security;
 alter table public.transactions enable row level security;
 
--- PROFILES POLICIES
+-- Helper function to check if user is admin
+create or replace function public.is_admin()
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.admin_users
+    where id = auth.uid()
+  );
+end;
+$$ language plpgsql security definer;
+
+-- PROFILES POLICIES (Updated for Admin)
 create policy "Users can view own profile"
-  on public.profiles for select using (auth.uid() = id);
+  on public.profiles for select using (auth.uid() = id OR public.is_admin());
 
 create policy "Users can update own profile"
-  on public.profiles for update using (auth.uid() = id);
+  on public.profiles for update using (auth.uid() = id OR public.is_admin());
 
 create policy "Users can insert own profile"
   on public.profiles for insert with check (auth.uid() = id);
 
 -- PAYMENT METHODS POLICIES
 create policy "Users can view own payment methods"
-  on public.payment_methods for select using (auth.uid() = user_id);
+  on public.payment_methods for select using (auth.uid() = user_id OR public.is_admin());
 
 create policy "Users can insert own payment methods"
   on public.payment_methods for insert with check (auth.uid() = user_id);
@@ -154,7 +179,7 @@ create policy "Users can delete own payment methods"
 
 -- TRIPS POLICIES
 create policy "Users can view own trips"
-  on public.trips for select using (auth.uid() = user_id);
+  on public.trips for select using (auth.uid() = user_id OR public.is_admin());
 
 create policy "Users can insert own trips"
   on public.trips for insert with check (auth.uid() = user_id);
@@ -167,7 +192,7 @@ create policy "Users can delete own trips"
 
 -- WISHLIST POLICIES
 create policy "Users can view own wishlist"
-  on public.wishlist for select using (auth.uid() = user_id);
+  on public.wishlist for select using (auth.uid() = user_id OR public.is_admin());
 
 create policy "Users can insert own wishlist"
   on public.wishlist for insert with check (auth.uid() = user_id);
@@ -180,7 +205,7 @@ create policy "Users can delete own wishlist"
 
 -- TRANSACTIONS POLICIES
 create policy "Users can view own transactions"
-  on public.transactions for select using (auth.uid() = user_id);
+  on public.transactions for select using (auth.uid() = user_id OR public.is_admin());
 
 create policy "Users can insert own transactions"
   on public.transactions for insert with check (auth.uid() = user_id);
@@ -321,15 +346,20 @@ create table if not exists public.destinations (
   is_featured boolean default false,
   is_popular boolean default false,
   popularity_badge text, -- e.g., 'Trending', 'Hot'
+  status text default 'published' check (status in ('draft', 'published', 'archived')),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
 
 -- RLS for Destinations
 alter table public.destinations enable row level security;
 
 create policy "Anyone can view destinations"
   on public.destinations for select using (true);
+
+create policy "Admins can manage destinations"
+  on public.destinations for all using (public.is_admin());
 
 -- Trigger for updated_at
 create trigger on_destinations_updated
@@ -363,7 +393,19 @@ alter table public.events enable row level security;
 create policy "Anyone can view events"
   on public.events for select using (true);
 
+create policy "Admins can manage events"
+  on public.events for all using (public.is_admin());
+
 -- Trigger for updated_at
 create trigger on_events_updated
   before update on public.events
   for each row execute function public.handle_updated_at();
+
+-- =============================================================================
+-- 9. REALTIME
+-- =============================================================================
+alter publication supabase_realtime add table profiles;
+alter publication supabase_realtime add table trips;
+alter publication supabase_realtime add table transactions;
+alter publication supabase_realtime add table destinations;
+alter publication supabase_realtime add table wishlist;

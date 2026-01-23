@@ -1,5 +1,35 @@
-import { useState } from "react";
-import { Target, Plus, TrendingUp, Loader2, Trash2, DollarSign, Lock, Unlock, Music, ArrowDownCircle, Star, Receipt, Palmtree, Mountain, Building2, Compass, Theater, Mic, Tent, Trophy, ClipboardList, Pin, Plane } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useLocation, Link } from "react-router-dom";
+import {
+  Target,
+  Plus,
+  TrendingUp,
+  Loader2,
+  Trash2,
+  DollarSign,
+  Lock,
+  Unlock,
+  Music,
+  ArrowDownCircle,
+  Star,
+  Receipt,
+  Palmtree,
+  Mountain,
+  Building2,
+  Compass,
+  Theater,
+  Mic,
+  Tent,
+  Trophy,
+  ClipboardList,
+  Pin,
+  Plane,
+  MapPin,
+  CalendarDays,
+  PenLine,
+  Sparkles,
+  Clock,
+} from "lucide-react";
 import TripCard from "@/components/TripCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +45,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -28,98 +56,81 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTrips, useCreateTrip, useDeleteTrip, useTripStats } from "@/hooks/useTrips";
 import { useCreateTransaction } from "@/hooks/useTransactions";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-
-import { Link } from "react-router-dom";
+import { format, formatDistanceToNow, differenceInDays } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
+import { DestinationGoalDialog } from "@/components/DestinationGoalDialog";
+import { CustomGoalDialog } from "@/components/CustomGoalDialog";
 import heroBeach from "@/assets/hero-beach.jpg";
 import mountainAdventure from "@/assets/mountain-adventure.jpg";
 import savingsTravel from "@/assets/savings-travel.jpg";
+import type { Destination, Trip } from "@/types/database.types";
 
 const TravelGoals = () => {
-  const { data: trips, isLoading } = useTrips();
+  const location = useLocation();
+  const { data: trips, isLoading, refetch } = useTrips();
   const { data: tripStats } = useTripStats();
-  const createTrip = useCreateTrip();
   const deleteTrip = useDeleteTrip();
   const createTransaction = useCreateTransaction();
 
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
 
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  // Dialog states
+  const [isDestinationDialogOpen, setIsDestinationDialogOpen] = useState(false);
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
   const [isAddFundsDialogOpen, setIsAddFundsDialogOpen] = useState(false);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
-  const [selectedTrip, setSelectedTrip] = useState<any>(null);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [tripToDelete, setTripToDelete] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [activeTab, setActiveTab] = useState("trips");
 
-  const [newTrip, setNewTrip] = useState({
-    destination: "",
-    description: "",
-    category: "beach" as const,
-    goal_type: "flexible" as "flexible" | "locked",
-    event_type: null as string | null,
-    target_amount: "",
-    target_date: "",
-  });
+  // For destination-based goals from navigation state
+  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
+
+  // Check if navigated from a destination click
+  useEffect(() => {
+    const destinationFromState = location.state?.destination as Destination | undefined;
+    if (destinationFromState) {
+      setSelectedDestination(destinationFromState);
+      setIsDestinationDialogOpen(true);
+      // Clear the state to prevent re-opening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const getImageForCategory = (category: string | null) => {
     switch (category) {
-      case 'beach': return heroBeach;
-      case 'mountain': return mountainAdventure;
-      case 'event': return savingsTravel;
+      case "beach": return heroBeach;
+      case "mountain": return mountainAdventure;
+      case "event": return savingsTravel;
       default: return savingsTravel;
     }
   };
 
-  const handleCreateTrip = async () => {
-    if (!newTrip.destination || !newTrip.target_amount || !newTrip.target_date) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await createTrip.mutateAsync({
-        destination: newTrip.destination,
-        description: newTrip.description || null,
-        category: newTrip.category,
-        goal_type: newTrip.goal_type,
-        event_type: newTrip.category === 'event' ? newTrip.event_type : null,
-        target_amount: parseFloat(newTrip.target_amount),
-        target_date: newTrip.target_date,
-      });
-
-      toast({
-        title: "Goal created!",
-        description: `Your ${newTrip.goal_type === 'locked' ? 'locked' : 'flexible'} savings goal for ${newTrip.destination} has been created.`,
-      });
-
-      setNewTrip({
-        destination: "",
-        description: "",
-        category: "beach",
-        goal_type: "flexible",
-        event_type: null,
-        target_amount: "",
-        target_date: "",
-      });
-      setIsCreateDialogOpen(false);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create goal. Please try again.",
-        variant: "destructive",
-      });
+  const getCategoryIcon = (category: string | null) => {
+    switch (category) {
+      case "beach": return Palmtree;
+      case "mountain": return Mountain;
+      case "city": return Building2;
+      case "adventure": return Compass;
+      case "cultural": return Theater;
+      case "event": return Music;
+      default: return Target;
     }
   };
 
@@ -132,10 +143,11 @@ const TravelGoals = () => {
         title: "Goal deleted",
         description: "Your savings goal has been removed.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete goal.";
       toast({
         title: "Error",
-        description: error.message || "Failed to delete goal.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -149,23 +161,25 @@ const TravelGoals = () => {
     try {
       await createTransaction.mutateAsync({
         trip_id: selectedTripId,
-        type: 'deposit',
+        type: "deposit",
         amount: parseFloat(depositAmount),
-        description: 'Savings deposit',
+        description: "Savings deposit",
       });
 
       toast({
-        title: "Funds added!",
+        title: "💰 Funds added!",
         description: `${formatPrice(parseFloat(depositAmount))} has been added to your savings.`,
       });
 
       setDepositAmount("");
       setIsAddFundsDialogOpen(false);
       setSelectedTripId(null);
-    } catch (error: any) {
+      refetch();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to add funds.";
       toast({
         title: "Error",
-        description: error.message || "Failed to add funds.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -177,10 +191,14 @@ const TravelGoals = () => {
     const amount = parseFloat(withdrawAmount);
 
     // Check if it's a locked goal
-    if (selectedTrip.goal_type === 'locked' && selectedTrip.saved_amount < selectedTrip.target_amount) {
+    if (
+      selectedTrip.goal_type === "locked" &&
+      selectedTrip.saved_amount < selectedTrip.target_amount
+    ) {
       toast({
         title: "Cannot withdraw",
-        description: "This is a locked goal. You can only withdraw once you've reached your target amount.",
+        description:
+          "This is a locked goal. You can only withdraw once you've reached your target amount.",
         variant: "destructive",
       });
       return;
@@ -199,30 +217,32 @@ const TravelGoals = () => {
     try {
       await createTransaction.mutateAsync({
         trip_id: selectedTripId,
-        type: 'withdrawal',
+        type: "withdrawal",
         amount: amount,
-        description: 'Withdrawal from savings',
+        description: "Withdrawal from savings",
       });
 
       toast({
-        title: "Withdrawal successful!",
-        description: `$${withdrawAmount} has been withdrawn from your savings.`,
+        title: "✅ Withdrawal successful!",
+        description: `${formatPrice(amount)} has been withdrawn from your savings.`,
       });
 
       setWithdrawAmount("");
       setIsWithdrawDialogOpen(false);
       setSelectedTripId(null);
       setSelectedTrip(null);
-    } catch (error: any) {
+      refetch();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to withdraw funds.";
       toast({
         title: "Error",
-        description: error.message || "Failed to withdraw funds.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
 
-  const openWithdrawDialog = (trip: any) => {
+  const openWithdrawDialog = (trip: Trip) => {
     setSelectedTripId(trip.id);
     setSelectedTrip(trip);
     setIsWithdrawDialogOpen(true);
@@ -231,431 +251,392 @@ const TravelGoals = () => {
   const totalSaved = tripStats?.totalSaved || 0;
   const totalTarget = tripStats?.totalTarget || 0;
   const overallProgress = totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
-  const activeTrips = trips?.filter(t => t.status === 'active' && t.category !== 'event') || [];
-  const eventTrips = trips?.filter(t => t.status === 'active' && t.category === 'event') || [];
+  const activeTrips = trips?.filter((t) => t.status === "active" && t.category !== "event") || [];
+  const eventTrips = trips?.filter((t) => t.status === "active" && t.category === "event") || [];
+
+  // Split by goal type
+  const destinationGoals = activeTrips.filter((t) => !t.is_custom_goal);
+  const customGoals = activeTrips.filter((t) => t.is_custom_goal);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center dark:bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  const renderGoalCard = (trip: Trip, index: number) => {
+    const progress = (trip.saved_amount / trip.target_amount) * 100;
+    const daysLeft = differenceInDays(new Date(trip.target_date), new Date());
+    const CategoryIcon = getCategoryIcon(trip.category);
+
+    return (
+      <div
+        key={trip.id}
+        className="animate-fade-in"
+        style={{ animationDelay: `${index * 0.05}s` }}
+      >
+        <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 dark:bg-card dark:border-border group">
+          <div className="flex flex-col md:flex-row">
+            {/* Image Section */}
+            <div className="md:w-48 h-32 md:h-auto relative overflow-hidden">
+              <img
+                src={trip.image_url || getImageForCategory(trip.category)}
+                alt={trip.destination}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r md:bg-gradient-to-t from-black/50 to-transparent" />
+              <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
+                {trip.goal_type === "locked" ? (
+                  <Badge className="bg-orange-500/90 text-white text-[10px] border-none">
+                    <Lock className="h-2.5 w-2.5 mr-0.5" />
+                    Locked
+                  </Badge>
+                ) : (
+                  <Badge className="bg-green-500/90 text-white text-[10px] border-none">
+                    <Unlock className="h-2.5 w-2.5 mr-0.5" />
+                    Flexible
+                  </Badge>
+                )}
+                {trip.is_custom_goal && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    <PenLine className="h-2.5 w-2.5 mr-0.5" />
+                    Custom
+                  </Badge>
+                )}
+              </div>
+              {!trip.is_custom_goal && (
+                <div className="absolute bottom-2 left-2">
+                  <Badge variant="secondary" className="text-[10px] bg-black/50 text-white border-none">
+                    <MapPin className="h-2.5 w-2.5 mr-0.5" />
+                    {trip.location || "Destination"}
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            {/* Content Section */}
+            <div className="flex-1 p-4">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <CategoryIcon className="h-4 w-4 text-primary" />
+                    <h3 className="font-bold text-base">{trip.destination}</h3>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <CalendarDays className="h-3 w-3" />
+                    <span>Target: {format(new Date(trip.target_date), "MMM dd, yyyy")}</span>
+                    {daysLeft > 0 && (
+                      <Badge variant="outline" className="text-[8px] h-4">
+                        <Clock className="h-2 w-2 mr-0.5" />
+                        {daysLeft}d left
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {trip.savings_frequency && (
+                  <Badge variant="outline" className="text-[10px] capitalize">
+                    <TrendingUp className="h-2.5 w-2.5 mr-0.5" />
+                    {trip.savings_frequency}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Savings Target Display */}
+              {(trip.daily_target || trip.weekly_target || trip.monthly_target) && (
+                <div className="flex gap-2 mb-3 flex-wrap">
+                  {trip.daily_target && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${trip.savings_frequency === "daily" ? "bg-primary/20 text-primary font-semibold" : "bg-muted"}`}>
+                      Daily: {formatPrice(trip.daily_target)}
+                    </span>
+                  )}
+                  {trip.weekly_target && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${trip.savings_frequency === "weekly" ? "bg-primary/20 text-primary font-semibold" : "bg-muted"}`}>
+                      Weekly: {formatPrice(trip.weekly_target)}
+                    </span>
+                  )}
+                  {trip.monthly_target && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${trip.savings_frequency === "monthly" ? "bg-primary/20 text-primary font-semibold" : "bg-muted"}`}>
+                      Monthly: {formatPrice(trip.monthly_target)}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Progress Bar */}
+              <div className="mb-3">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-semibold text-primary">
+                    {formatPrice(trip.saved_amount)} saved
+                  </span>
+                  <span className="text-muted-foreground">
+                    of {formatPrice(trip.target_amount)}
+                  </span>
+                </div>
+                <Progress value={Math.min(progress, 100)} className="h-2" />
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-[10px] text-muted-foreground">
+                    {progress.toFixed(1)}% complete
+                  </span>
+                  {progress >= 100 && (
+                    <Badge className="bg-green-500 text-white text-[10px] border-none">
+                      <Sparkles className="h-2.5 w-2.5 mr-0.5" />
+                      Goal Reached!
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => {
+                    setSelectedTripId(trip.id);
+                    setIsAddFundsDialogOpen(true);
+                  }}
+                >
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Add Funds
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openWithdrawDialog(trip)}
+                  disabled={
+                    trip.goal_type === "locked" &&
+                    trip.saved_amount < trip.target_amount
+                  }
+                >
+                  <ArrowDownCircle className="h-4 w-4 mr-1" />
+                  Withdraw
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setTripToDelete(trip.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              {trip.goal_type === "locked" &&
+                trip.saved_amount < trip.target_amount && (
+                  <p className="text-[10px] text-orange-600 mt-2">
+                    🔒 Withdrawal locked until you reach{" "}
+                    {formatPrice(trip.target_amount)}
+                  </p>
+                )}
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen py-6">
+    <div className="min-h-screen py-6 dark:bg-background">
       <div className="container mx-auto px-4 max-w-5xl">
+        {/* Header */}
         <div className="mb-6 animate-fade-in flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
               <Target className="h-7 w-7 text-primary" />
-              Your Savings Goals
+              {t('travelGoals.title')}
             </h1>
-            <p className="text-sm text-muted-foreground">Track travel and event savings in one place</p>
+            <p className="text-sm text-muted-foreground">
+              {t('travelGoals.subtitle')}
+            </p>
           </div>
           <Link to="/transactions">
             <Button variant="outline" size="sm">
               <Receipt className="h-4 w-4 mr-2" />
-              View Transactions
+              {t('dashboard.viewTransactions')}
             </Button>
           </Link>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-4 mb-8 animate-scale-in">
-          <Card className="p-4">
-            <div className="text-xs text-muted-foreground mb-1">Total Saved</div>
-            <div className="text-xl font-bold text-primary">${totalSaved.toLocaleString()}</div>
+          <Card className="p-4 dark:bg-card dark:border-border">
+            <div className="text-xs text-muted-foreground mb-1">{t('dashboard.totalSavings')}</div>
+            <div className="text-xl font-bold text-primary">
+              {formatPrice(totalSaved)}
+            </div>
           </Card>
-          <Card className="p-4">
+          <Card className="p-4 dark:bg-card dark:border-border">
             <div className="text-xs text-muted-foreground mb-1">Total Target</div>
-            <div className="text-xl font-bold">${totalTarget.toLocaleString()}</div>
+            <div className="text-xl font-bold">{formatPrice(totalTarget)}</div>
           </Card>
-          <Card className="p-4">
+          <Card className="p-4 dark:bg-card dark:border-border">
             <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              Overall Progress
+              {t('travelGoals.progress')}
             </div>
-            <div className="text-xl font-bold text-primary">{overallProgress.toFixed(1)}%</div>
+            <div className="text-xl font-bold text-primary">
+              {overallProgress.toFixed(1)}%
+            </div>
+            <Progress value={Math.min(overallProgress, 100)} className="h-1 mt-1" />
           </Card>
         </div>
 
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
+          <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+            <TabsList className="dark:bg-muted">
               <TabsTrigger value="trips" className="text-sm">
-                <Plane className="h-4 w-4 mr-2" /> Travel Goals ({activeTrips.length})
+                <Plane className="h-4 w-4 mr-2" />
+                {t('travelGoals.title')} ({activeTrips.length})
               </TabsTrigger>
               <TabsTrigger value="events" className="text-sm">
-                <Music className="h-4 w-4 mr-2" /> Live Events ({eventTrips.length})
+                <Music className="h-4 w-4 mr-2" />
+                Live Events ({eventTrips.length})
               </TabsTrigger>
             </TabsList>
 
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
+            {/* Create Goal Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="hero">
                   <Plus className="h-4 w-4 mr-1" />
-                  Add New Goal
+                  {t('travelGoals.createGoal')}
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Create New Savings Goal</DialogTitle>
-                  <DialogDescription>
-                    Save for trips, concerts, festivals, and more!
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Goal Type *</Label>
-                    <RadioGroup
-                      value={newTrip.goal_type}
-                      onValueChange={(value: "flexible" | "locked") => setNewTrip({ ...newTrip, goal_type: value })}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="flexible" id="flexible" />
-                        <Label htmlFor="flexible" className="flex items-center gap-1 cursor-pointer">
-                          <Unlock className="h-4 w-4 text-green-600" />
-                          <span>Flexible</span>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="locked" id="locked" />
-                        <Label htmlFor="locked" className="flex items-center gap-1 cursor-pointer">
-                          <Lock className="h-4 w-4 text-orange-600" />
-                          <span>Locked</span>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                    <p className="text-xs text-muted-foreground">
-                      {newTrip.goal_type === 'flexible'
-                        ? '💡 Withdraw anytime - perfect for flexible travel plans'
-                        : '🔒 Funds locked until you reach your goal - helps you stay committed!'}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/trips" className="flex items-center gap-2 cursor-pointer">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="font-medium">{t('trips.browseTrips')}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Save for a destination from our catalog
+                      </p>
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setIsCustomDialogOpen(true)}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <PenLine className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="font-medium">{t('travelGoals.customGoal')}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Create your own savings goal
                     </p>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="destination">
-                      {newTrip.category === 'event' ? 'Event Name *' : 'Destination *'}
-                    </Label>
-                    <Input
-                      id="destination"
-                      placeholder={newTrip.category === 'event' ? "e.g., Coldplay Concert, Nyege Nyege" : "e.g., Bali, Swiss Alps, Tokyo"}
-                      value={newTrip.destination}
-                      onChange={(e) => setNewTrip({ ...newTrip, destination: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      placeholder="Brief description"
-                      value={newTrip.description}
-                      onChange={(e) => setNewTrip({ ...newTrip, description: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select
-                        value={newTrip.category}
-                        onValueChange={(value: any) => setNewTrip({ ...newTrip, category: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beach">
-                            <div className="flex items-center gap-2">
-                              <Palmtree className="h-4 w-4 text-sky-500" /> Beach
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="mountain">
-                            <div className="flex items-center gap-2">
-                              <Mountain className="h-4 w-4 text-amber-700" /> Mountain
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="city">
-                            <div className="flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-indigo-500" /> City
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="adventure">
-                            <div className="flex items-center gap-2">
-                              <Compass className="h-4 w-4 text-emerald-500" /> Adventure
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="cultural">
-                            <div className="flex items-center gap-2">
-                              <Theater className="h-4 w-4 text-rose-500" /> Cultural
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="event">
-                            <div className="flex items-center gap-2">
-                              <Music className="h-4 w-4 text-fuchsia-500" /> Live Event
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {newTrip.category === 'event' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="event_type">Event Type</Label>
-                        <Select
-                          value={newTrip.event_type || ''}
-                          onValueChange={(value) => setNewTrip({ ...newTrip, event_type: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="concert">
-                              <div className="flex items-center gap-2">
-                                <Mic className="h-4 w-4" /> Concert
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="festival">
-                              <div className="flex items-center gap-2">
-                                <Tent className="h-4 w-4" /> Festival
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="sports">
-                              <div className="flex items-center gap-2">
-                                <Trophy className="h-4 w-4" /> Sports Event
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="conference">
-                              <div className="flex items-center gap-2">
-                                <ClipboardList className="h-4 w-4" /> Conference
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="other">
-                              <div className="flex items-center gap-2">
-                                <Pin className="h-4 w-4" /> Other
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {newTrip.category !== 'event' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="target_amount">Target Amount ($) *</Label>
-                        <Input
-                          id="target_amount"
-                          type="number"
-                          placeholder="5000"
-                          value={newTrip.target_amount}
-                          onChange={(e) => setNewTrip({ ...newTrip, target_amount: e.target.value })}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {newTrip.category === 'event' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="target_amount">Target Amount *</Label>
-                      <Input
-                        id="target_amount"
-                        type="number"
-                        placeholder="500"
-                        value={newTrip.target_amount}
-                        onChange={(e) => setNewTrip({ ...newTrip, target_amount: e.target.value })}
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="target_date">Target Date *</Label>
-                    <Input
-                      id="target_date"
-                      type="date"
-                      value={newTrip.target_date}
-                      onChange={(e) => setNewTrip({ ...newTrip, target_date: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="hero"
-                    onClick={handleCreateTrip}
-                    disabled={createTrip.isPending}
-                  >
-                    {createTrip.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create Goal'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <TabsContent value="trips">
             {activeTrips.length === 0 ? (
-              <Card className="p-12 text-center">
+              <Card className="p-12 text-center dark:bg-card dark:border-border">
                 <Target className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-bold mb-2">No travel goals yet</h3>
+                <h3 className="text-xl font-bold mb-2">{t('dashboard.noGoalsYet')}</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Start by exploring destinations and creating your first savings goal!
+                  {t('travelGoals.startExploring')}
                 </p>
-                <Link to="/trips">
-                  <Button variant="hero">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Explore Destinations
+                <div className="flex gap-3 justify-center">
+                  <Link to="/trips">
+                    <Button variant="default">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      {t('wishlist.exploreDestinations')}
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCustomDialogOpen(true)}
+                  >
+                    <PenLine className="h-4 w-4 mr-2" />
+                    {t('travelGoals.customGoal')}
                   </Button>
-                </Link>
+                </div>
               </Card>
             ) : (
               <div className="space-y-4">
-                {activeTrips.map((trip, index) => (
-                  <div key={trip.id} className="animate-fade-in relative group" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <Card className="overflow-hidden">
-                      <div className="flex flex-col md:flex-row">
-                        <div className="md:w-48 h-32 md:h-auto relative">
-                          <img
-                            src={trip.image_url || getImageForCategory(trip.category)}
-                            alt={trip.destination}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute top-2 left-2 flex gap-1">
-                            {trip.goal_type === 'locked' ? (
-                              <Badge className="bg-orange-500 text-white text-xs">
-                                <Lock className="h-3 w-3 mr-1" />
-                                Locked
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-green-500 text-white text-xs">
-                                <Unlock className="h-3 w-3 mr-1" />
-                                Flexible
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-1 p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-bold text-lg">{trip.destination}</h3>
-                              <p className="text-xs text-muted-foreground">
-                                Target: {format(new Date(trip.target_date), 'MMM dd, yyyy')}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Star className="h-3 w-3" />
-                              0 reviews
-                            </div>
-                          </div>
-
-                          <div className="mb-3">
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>{formatPrice(trip.saved_amount)} saved</span>
-                              <span className="text-muted-foreground">of {formatPrice(trip.target_amount)}</span>
-                            </div>
-                            <div className="w-full bg-muted rounded-full h-2">
-                              <div
-                                className="bg-primary h-2 rounded-full transition-all"
-                                style={{ width: `${Math.min((trip.saved_amount / trip.target_amount) * 100, 100)}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {((trip.saved_amount / trip.target_amount) * 100).toFixed(1)}% complete
-                            </p>
-                          </div>
-
-                          <div className="flex gap-2 flex-wrap">
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => {
-                                setSelectedTripId(trip.id);
-                                setIsAddFundsDialogOpen(true);
-                              }}
-                            >
-                              <DollarSign className="h-4 w-4 mr-1" />
-                              Add Funds
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openWithdrawDialog(trip)}
-                              disabled={trip.goal_type === 'locked' && trip.saved_amount < trip.target_amount}
-                            >
-                              <ArrowDownCircle className="h-4 w-4 mr-1" />
-                              Withdraw
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => setTripToDelete(trip.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          {trip.goal_type === 'locked' && trip.saved_amount < trip.target_amount && (
-                            <p className="text-xs text-orange-600 mt-2">
-                              🔒 Withdrawal locked until you reach {formatPrice(trip.target_amount)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                ))}
+                {activeTrips.map((trip, index) => renderGoalCard(trip, index))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="events">
             {eventTrips.length === 0 ? (
-              <Card className="p-12 text-center">
+              <Card className="p-12 text-center dark:bg-card dark:border-border">
                 <Music className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-bold mb-2">No event savings yet</h3>
+                <h3 className="text-xl font-bold mb-2">{t('travelGoals.noEventsYet')}</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Save for concerts, festivals, sports events, and more!
+                  {t('travelGoals.saveForEvents')}
                 </p>
-                <Button variant="hero" onClick={() => {
-                  setNewTrip({ ...newTrip, category: 'event' });
-                  setIsCreateDialogOpen(true);
-                }}>
+                <Button
+                  variant="hero"
+                  onClick={() => {
+                    setIsCustomDialogOpen(true);
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
-                  Save for an Event
+                  {t('travelGoals.createGoal')}
                 </Button>
               </Card>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
                 {eventTrips.map((trip, index) => (
-                  <Card key={trip.id} className="overflow-hidden animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <Card
+                    key={trip.id}
+                    className="overflow-hidden animate-fade-in dark:bg-card dark:border-border"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
                     <div className="p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <Badge className="mb-2 text-xs gap-1">
-                            {trip.event_type === 'concert' && <><Mic className="h-3 w-3" /> Concert</>}
-                            {trip.event_type === 'festival' && <><Tent className="h-3 w-3" /> Festival</>}
-                            {trip.event_type === 'sports' && <><Trophy className="h-3 w-3" /> Sports</>}
-                            {trip.event_type === 'conference' && <><ClipboardList className="h-3 w-3" /> Conference</>}
-                            {trip.event_type === 'other' && <><Pin className="h-3 w-3" /> Event</>}
-                            {!trip.event_type && <><Music className="h-3 w-3" /> Event</>}
+                            {trip.event_type === "concert" && (
+                              <>
+                                <Mic className="h-3 w-3" />
+                                Concert
+                              </>
+                            )}
+                            {trip.event_type === "festival" && (
+                              <>
+                                <Tent className="h-3 w-3" />
+                                Festival
+                              </>
+                            )}
+                            {trip.event_type === "sports" && (
+                              <>
+                                <Trophy className="h-3 w-3" />
+                                Sports
+                              </>
+                            )}
+                            {trip.event_type === "conference" && (
+                              <>
+                                <ClipboardList className="h-3 w-3" />
+                                Conference
+                              </>
+                            )}
+                            {trip.event_type === "other" && (
+                              <>
+                                <Pin className="h-3 w-3" />
+                                Event
+                              </>
+                            )}
+                            {!trip.event_type && (
+                              <>
+                                <Music className="h-3 w-3" />
+                                Event
+                              </>
+                            )}
                           </Badge>
                           <h3 className="font-bold text-lg">{trip.destination}</h3>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(trip.target_date), 'MMM dd, yyyy')}
+                            {format(new Date(trip.target_date), "MMM dd, yyyy")}
                           </p>
                         </div>
-                        {trip.goal_type === 'locked' ? (
+                        {trip.goal_type === "locked" ? (
                           <Lock className="h-4 w-4 text-orange-500" />
                         ) : (
                           <Unlock className="h-4 w-4 text-green-500" />
@@ -664,15 +645,20 @@ const TravelGoals = () => {
 
                       <div className="mb-3">
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="font-semibold">${trip.saved_amount.toLocaleString()}</span>
-                          <span className="text-muted-foreground">/ ${trip.target_amount.toLocaleString()}</span>
+                          <span className="font-semibold">
+                            {formatPrice(trip.saved_amount)}
+                          </span>
+                          <span className="text-muted-foreground">
+                            / {formatPrice(trip.target_amount)}
+                          </span>
                         </div>
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full"
-                            style={{ width: `${Math.min((trip.saved_amount / trip.target_amount) * 100, 100)}%` }}
-                          />
-                        </div>
+                        <Progress
+                          value={Math.min(
+                            (trip.saved_amount / trip.target_amount) * 100,
+                            100
+                          )}
+                          className="h-2"
+                        />
                       </div>
 
                       <div className="flex gap-2">
@@ -691,7 +677,10 @@ const TravelGoals = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => openWithdrawDialog(trip)}
-                          disabled={trip.goal_type === 'locked' && trip.saved_amount < trip.target_amount}
+                          disabled={
+                            trip.goal_type === "locked" &&
+                            trip.saved_amount < trip.target_amount
+                          }
                         >
                           <ArrowDownCircle className="h-4 w-4" />
                         </Button>
@@ -712,32 +701,55 @@ const TravelGoals = () => {
           </TabsContent>
         </Tabs>
 
+        {/* Destination Goal Dialog */}
+        <DestinationGoalDialog
+          destination={selectedDestination}
+          open={isDestinationDialogOpen}
+          onOpenChange={(open) => {
+            setIsDestinationDialogOpen(open);
+            if (!open) setSelectedDestination(null);
+          }}
+          onSuccess={() => refetch()}
+        />
+
+        {/* Custom Goal Dialog */}
+        <CustomGoalDialog
+          open={isCustomDialogOpen}
+          onOpenChange={setIsCustomDialogOpen}
+          onSuccess={() => refetch()}
+        />
+
+        {/* Add Funds Dialog */}
         {/* Add Funds Dialog */}
         <Dialog open={isAddFundsDialogOpen} onOpenChange={setIsAddFundsDialogOpen}>
-          <DialogContent>
+          <DialogContent className="dark:bg-card dark:border-border">
             <DialogHeader>
-              <DialogTitle>Add Funds to Savings</DialogTitle>
+              <DialogTitle>{t('travelGoals.addFunds')}</DialogTitle>
               <DialogDescription>
-                Enter the amount you want to add to this savings goal.
+                {t('travelGoals.enterAddFundsAmount')}
               </DialogDescription>
             </DialogHeader>
 
             <div className="py-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
+                <Label htmlFor="amount">{t('transactions.amount')}</Label>
                 <Input
                   id="amount"
                   type="number"
                   placeholder="100"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
+                  className="dark:bg-background dark:border-input"
                 />
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddFundsDialogOpen(false)}>
-                Cancel
+              <Button
+                variant="outline"
+                onClick={() => setIsAddFundsDialogOpen(false)}
+              >
+                {t('common.cancel')}
               </Button>
               <Button
                 variant="hero"
@@ -747,10 +759,10 @@ const TravelGoals = () => {
                 {createTransaction.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adding...
+                    {t('common.loading')}
                   </>
                 ) : (
-                  'Add Funds'
+                  t('travelGoals.addFunds')
                 )}
               </Button>
             </DialogFooter>
@@ -759,22 +771,27 @@ const TravelGoals = () => {
 
         {/* Withdraw Funds Dialog */}
         <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-          <DialogContent>
+          <DialogContent className="dark:bg-card dark:border-border">
             <DialogHeader>
-              <DialogTitle>Withdraw Funds</DialogTitle>
+              <DialogTitle>{t('transactions.withdrawal')}</DialogTitle>
               <DialogDescription>
-                {selectedTrip?.goal_type === 'locked'
-                  ? 'Congratulations on reaching your goal! You can now withdraw your funds.'
-                  : 'Enter the amount you want to withdraw from this savings goal.'}
+                {selectedTrip?.goal_type === "locked"
+                  ? t('travelGoals.congratulations')
+                  : t('travelGoals.withdrawDesc')}
               </DialogDescription>
             </DialogHeader>
 
             <div className="py-4">
-              <div className="bg-muted p-3 rounded-lg mb-4">
-                <p className="text-sm">Available balance: <span className="font-bold">${selectedTrip?.saved_amount?.toLocaleString() || 0}</span></p>
+              <div className="bg-muted p-3 rounded-lg mb-4 dark:bg-muted/50">
+                <p className="text-sm">
+                  {t('travelGoals.availableBalance')}:{" "}
+                  <span className="font-bold">
+                    {formatPrice(selectedTrip?.saved_amount || 0)}
+                  </span>
+                </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="withdraw_amount">Withdraw Amount ($)</Label>
+                <Label htmlFor="withdraw_amount">{t('transactions.amount')}</Label>
                 <Input
                   id="withdraw_amount"
                   type="number"
@@ -782,26 +799,34 @@ const TravelGoals = () => {
                   max={selectedTrip?.saved_amount || 0}
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
+                  className="dark:bg-background dark:border-input"
                 />
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsWithdrawDialogOpen(false)}>
-                Cancel
+              <Button
+                variant="outline"
+                onClick={() => setIsWithdrawDialogOpen(false)}
+              >
+                {t('common.cancel')}
               </Button>
               <Button
                 variant="hero"
                 onClick={handleWithdraw}
-                disabled={createTransaction.isPending || !withdrawAmount || parseFloat(withdrawAmount) > (selectedTrip?.saved_amount || 0)}
+                disabled={
+                  createTransaction.isPending ||
+                  !withdrawAmount ||
+                  parseFloat(withdrawAmount) > (selectedTrip?.saved_amount || 0)
+                }
               >
                 {createTransaction.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
+                    {t('common.loading')}
                   </>
                 ) : (
-                  'Withdraw'
+                  t('transactions.withdrawal')
                 )}
               </Button>
             </DialogFooter>
@@ -809,16 +834,19 @@ const TravelGoals = () => {
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
-        <AlertDialog open={!!tripToDelete} onOpenChange={() => setTripToDelete(null)}>
-          <AlertDialogContent>
+        <AlertDialog
+          open={!!tripToDelete}
+          onOpenChange={() => setTripToDelete(null)}
+        >
+          <AlertDialogContent className="dark:bg-card dark:border-border">
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Savings Goal?</AlertDialogTitle>
+              <AlertDialogTitle>{t('travelGoals.deleteGoal')}?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your savings goal and all associated data.
+                {t('travelGoals.deleteDesc')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteTrip}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -826,16 +854,16 @@ const TravelGoals = () => {
                 {deleteTrip.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
+                    {t('common.loading')}
                   </>
                 ) : (
-                  'Delete'
+                  t('common.delete')
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
+      </div >
     </div >
   );
 };

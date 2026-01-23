@@ -1,4 +1,4 @@
-import { Moon, Sun, Menu, Home, LayoutDashboard, Plane, Heart, User, MessageCircle, LogOut, Globe, ChevronDown, Search, Calendar, Bot, Receipt, Languages, Banknote } from "lucide-react";
+import { Moon, Sun, Menu, Home, LayoutDashboard, Plane, Heart, User, MessageCircle, LogOut, Globe, ChevronDown, Search, Calendar, Bot, Receipt, Languages, Banknote, ShieldCheck } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -117,7 +117,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
   const { t, i18n } = useTranslation();
   const { currency, setCurrency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -143,6 +143,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
 
     if (user) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.from('profiles') as any).update({ language: code }).eq('id', user.id);
       } catch (error) {
         console.error('Error updating language preference:', error);
@@ -162,6 +163,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
 
     if (user) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.from('profiles') as any).update({ currency: code }).eq('id', user.id);
       } catch (error) {
         console.error('Error updating currency preference:', error);
@@ -271,9 +273,10 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onThemeToggle}>
+            {/* Theme Toggle Removed - Enforced Dark Mode */}
+            {/* <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onThemeToggle}>
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
+            </Button> */}
 
             <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               <Menu className="h-4 w-4" />
@@ -297,6 +300,14 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
                     <div className="font-semibold">{displayUser.firstName} {displayUser.lastName}</div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard" className="cursor-pointer text-xs font-semibold text-primary">
+                        <ShieldCheck className="h-3 w-3 mr-2" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link to="/" className="cursor-pointer text-xs">
                       <Home className="h-3 w-3 mr-2" />
@@ -431,7 +442,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
           </div>
         )}
       </div>
-    </nav>
+    </nav >
   );
 };
 

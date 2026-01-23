@@ -166,6 +166,7 @@ const PreferenceQuiz = ({ onComplete }: { onComplete: () => void }) => {
             const uniqueTags = Array.from(new Set(selectedTags));
 
             const { error } = await (supabase
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .from('profiles') as any)
                 .update({
                     travel_preferences: uniqueTags,
@@ -184,11 +185,12 @@ const PreferenceQuiz = ({ onComplete }: { onComplete: () => void }) => {
             });
 
             onComplete();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error saving preferences:", error);
+            const errMessage = error instanceof Error ? error.message : "Failed to save preferences.";
             toast({
                 title: "Error",
-                description: error.message || "Failed to save preferences.",
+                description: errMessage,
                 variant: "destructive",
             });
         } finally {

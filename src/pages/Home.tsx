@@ -3,23 +3,26 @@ import HeroCarousel from "@/components/HeroCarousel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Home = () => {
+  const { t } = useTranslation();
+
   const features = [
     {
       icon: Shield,
-      title: "Secure Savings",
-      description: "Your funds are protected with bank-level security. Save with confidence knowing your money is safe."
+      title: t('home.secureSavings'),
+      description: t('home.secureSavingsDesc')
     },
     {
       icon: TrendingUp,
-      title: "Track Progress",
-      description: "Monitor your savings growth with detailed analytics and beautiful visualizations of your journey."
+      title: t('home.trackProgress'),
+      description: t('home.trackProgressDesc')
     },
     {
       icon: Zap,
-      title: "Quick Setup",
-      description: "Create your account in minutes and start saving for your dream destinations right away."
+      title: t('home.quickSetup'),
+      description: t('home.quickSetupDesc')
     }
   ];
 
@@ -31,16 +34,16 @@ const Home = () => {
 
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-4">Why Choose TembeaSave?</h2>
+          <h2 className="text-4xl font-bold mb-4">{t('home.heroTitle')}</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            The smarter way to save for your travel adventures
+            {t('home.heroSubtitle')}
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className="p-8 hover:shadow-[var(--shadow-elegant)] transition-all duration-300 hover:-translate-y-2 animate-scale-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -58,14 +61,14 @@ const Home = () => {
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Start Your Journey?
+              {t('home.readyToStart')}
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              Join thousands of travelers who are making their dreams come true with TembeaSave
+              {t('home.joinThousands')}
             </p>
             <Link to="/auth">
               <Button variant="secondary" size="lg" className="text-lg">
-                Create Free Account
+                {t('home.createFreeAccount')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>

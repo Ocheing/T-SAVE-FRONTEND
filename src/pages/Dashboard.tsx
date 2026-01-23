@@ -16,6 +16,7 @@ import { useDestinations } from "@/hooks/useDestinations";
 import { useRecommendedEvents } from "@/hooks/useEvents";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // ALL_DESTINATIONS removed - now fetched from Supabase via useDestinations hook
 
@@ -26,6 +27,7 @@ const Dashboard = () => {
   const { data: tripStats } = useTripStats();
   const { data: transactionStats } = useTransactionStats();
   const { data: destinations, isLoading: isLoadingDestinations } = useDestinations();
+  const { t } = useTranslation();
 
   const userName = profile?.full_name?.split(' ')[0] || 'Traveler';
   const hasPreferences = profile?.travel_preferences && profile.travel_preferences.length > 0;
@@ -65,9 +67,9 @@ const Dashboard = () => {
   })();
 
   const quickActions = [
-    { icon: Plus, label: "Add Savings Goal", link: "/travel-goals" },
-    { icon: Plane, label: "Book a Trip", link: "/trips" },
-    { icon: Receipt, label: "View Transactions", link: "/transactions" }
+    { icon: Plus, label: t('dashboard.addSavingsGoal'), link: "/travel-goals" },
+    { icon: Plane, label: t('dashboard.bookTrip'), link: "/trips" },
+    { icon: Receipt, label: t('dashboard.viewTransactions'), link: "/transactions" }
   ];
 
   return (
@@ -76,8 +78,8 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-6 animate-fade-in flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">Welcome back, {userName}! <Plane className="h-6 w-6 text-primary" /></h1>
-            <p className="text-xs text-muted-foreground">Track your progress and manage your savings</p>
+            <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">{t('dashboard.welcome')}, {userName}! <Plane className="h-6 w-6 text-primary" /></h1>
+            <p className="text-xs text-muted-foreground">{t('travelGoals.subtitle')}</p>
           </div>
           <Link to="/chat">
             <Button size="icon" variant="outline" className="h-9 w-9">
@@ -97,13 +99,13 @@ const Dashboard = () => {
                 <Compass className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-base font-bold mb-1">Design your holidays, {userName}!</h3>
+                <h3 className="text-base font-bold mb-1">{t('dashboard.designHolidays')}, {userName}!</h3>
                 <p className="text-xs text-muted-foreground mb-3 max-w-md">
-                  Fill out the survey to get the best recommendations from us tailored to your unique style.
+                  {t('dashboard.quizDescription')}
                 </p>
                 <Link to="/quiz">
                   <Button variant="hero" size="sm">
-                    Take a Quiz
+                    {t('dashboard.takeQuiz')}
                     <ArrowRight className="ml-2 h-3 w-3" />
                   </Button>
                 </Link>
@@ -115,7 +117,7 @@ const Dashboard = () => {
         {/* Stats Grid */}
         <div className="grid md:grid-cols-4 gap-3 mb-6 animate-scale-in">
           <StatCard
-            title="Total Saved"
+            title={t('dashboard.totalSavings')}
             value={formatPrice(tripStats?.totalSaved || 0)}
             icon={DollarSign}
             trend={transactionStats?.percentChange ? `${transactionStats.percentChange > 0 ? '+' : ''}${transactionStats.percentChange}% this month` : undefined}
@@ -124,7 +126,7 @@ const Dashboard = () => {
             iconBgColor="bg-blue-100"
           />
           <StatCard
-            title="Monthly Average"
+            title={t('dashboard.monthlyAverage')}
             value={formatPrice(transactionStats?.thisMonthSavings || 0)}
             icon={TrendingUp}
             trend={transactionStats?.lastMonthSavings ? `vs ${formatPrice(transactionStats.lastMonthSavings)}` : "Keep saving!"}
@@ -133,14 +135,14 @@ const Dashboard = () => {
             iconBgColor="bg-green-100"
           />
           <StatCard
-            title="Active Goals"
+            title={t('dashboard.activeGoals')}
             value={String(tripStats?.activeGoals || 0)}
             icon={Target}
             iconColor="text-purple-600"
             iconBgColor="bg-purple-100"
           />
           <StatCard
-            title="Next Trip"
+            title={t('dashboard.nextTrip')}
             value={nextTripInfo}
             icon={Calendar}
             iconColor="text-amber-600"
@@ -188,9 +190,9 @@ const Dashboard = () => {
                   ))
                 ) : (
                   <Card className="p-8 text-center text-muted-foreground text-sm border-dashed bg-background/50 backdrop-blur-sm">
-                    <p className="mb-2">You haven't set any travel goals yet.</p>
+                    <p className="mb-2">{t('dashboard.noGoalsYet')}</p>
                     <Link to="/travel-goals">
-                      <Button variant="default" size="sm">Create your first goal</Button>
+                      <Button variant="default" size="sm">{t('dashboard.createFirstGoal')}</Button>
                     </Link>
                   </Card>
                 )}
@@ -200,10 +202,10 @@ const Dashboard = () => {
             {/* Featured Destinations */}
             <div>
               <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-bold">Featured Destinations</h2>
+                <h2 className="text-lg font-bold">{t('dashboard.featuredDestinations')}</h2>
                 <Link to="/trips">
                   <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary">
-                    View All →
+                    {t('common.viewAll')} →
                   </Button>
                 </Link>
               </div>
@@ -237,7 +239,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-5 w-5 text-primary" />
-                  <h2 className="text-base font-bold">Upcoming Events</h2>
+                  <h2 className="text-base font-bold">{t('dashboard.upcomingEvents')}</h2>
                 </div>
                 <Badge variant="secondary" className="text-[10px] font-bold">For You</Badge>
               </div>
@@ -283,12 +285,14 @@ const Dashboard = () => {
             </Card>
 
             <Card className="p-4">
-              <h2 className="text-base font-bold mb-3">Quick Actions</h2>
+              <h2 className="text-base font-bold mb-3">{t('dashboard.quickActions')}</h2>
               <div className="space-y-2">
                 {quickActions.map((action, index) => (
                   <Link key={index} to={action.link}>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" size="sm">
                       <action.icon className="h-3 w-3 mr-2 text-muted-foreground" />
+                      {/* We're using action.label which is hardcoded in quickActions array. 
+                          We should ideally translate that array too, but it's defined inside component. */}
                       {action.label}
                     </Button>
                   </Link>
@@ -297,7 +301,7 @@ const Dashboard = () => {
             </Card>
 
             <Card className="p-4">
-              <h2 className="text-base font-bold mb-3">Recent Bookings</h2>
+              <h2 className="text-base font-bold mb-3">{t('dashboard.recentBookings')}</h2>
               <div className="space-y-2">
                 {recentBookings.length > 0 ? (
                   recentBookings.map((booking, index) => (

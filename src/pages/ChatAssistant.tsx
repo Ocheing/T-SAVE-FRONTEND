@@ -137,7 +137,7 @@ What would you like help with today?`
 
       // Map messages to Gemini format
       // Filter out initial assistant greeting if present to start with user
-      let validMessages = [...messages];
+      const validMessages = [...messages];
       if (validMessages.length > 0 && validMessages[0].role === 'assistant') {
         validMessages.shift();
       }
@@ -167,6 +167,12 @@ What would you like help with today?`
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API error:', response.status, errorData);
+        // If API key is invalid, fall back to built-in responses
+        if (response.status === 400 || response.status === 401 || response.status === 403) {
+          throw new Error('API key configuration issue');
+        }
         throw new Error('API request failed');
       }
 

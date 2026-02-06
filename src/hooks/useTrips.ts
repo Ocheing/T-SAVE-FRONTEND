@@ -3,6 +3,12 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Trip, TripInsert, TripUpdate } from '@/types/database.types';
 
+// Cache configuration constants
+const CACHE_CONFIG = {
+    staleTime: 1000 * 60 * 2, // Data considered fresh for 2 minutes
+    gcTime: 1000 * 60 * 30,   // Keep in cache for 30 minutes
+};
+
 export function useTrips(status?: 'active' | 'completed' | 'cancelled') {
     const { user } = useAuth();
 
@@ -27,6 +33,9 @@ export function useTrips(status?: 'active' | 'completed' | 'cancelled') {
             return data as Trip[];
         },
         enabled: !!user,
+        staleTime: CACHE_CONFIG.staleTime,
+        gcTime: CACHE_CONFIG.gcTime,
+        refetchOnWindowFocus: false,
     });
 }
 
@@ -59,9 +68,11 @@ export function useCreateTrip() {
         mutationFn: async (trip: Omit<TripInsert, 'user_id'>) => {
             if (!user) throw new Error('Not authenticated');
 
+            const tripData = { ...trip, user_id: user.id };
             const { data, error } = await supabase
                 .from('trips')
-                .insert({ ...trip, user_id: user.id })
+                // @ts-expect-error - Supabase type generation mismatch with actual schema
+                .insert(tripData)
                 .select()
                 .single();
 
@@ -81,6 +92,7 @@ export function useUpdateTrip() {
         mutationFn: async ({ id, updates }: { id: string; updates: TripUpdate }) => {
             const { data, error } = await supabase
                 .from('trips')
+                // @ts-expect-error - Supabase type generation mismatch with actual schema
                 .update(updates)
                 .eq('id', id)
                 .select()
@@ -130,15 +142,19 @@ export function useTripStats() {
 
             if (error) throw error;
 
-            const activeTrips = trips?.filter(t => t.status === 'active') || [];
-            const totalSaved = trips?.reduce((sum, t) => sum + (t.saved_amount || 0), 0) || 0;
+            // Type-safe mapping of the selected columns
+            type TripStatsRow = Pick<Trip, 'target_amount' | 'saved_amount' | 'status'>;
+            const typedTrips = (trips || []) as TripStatsRow[];
+
+            const activeTrips = typedTrips.filter(t => t.status === 'active');
+            const totalSaved = typedTrips.reduce((sum, t) => sum + (t.saved_amount || 0), 0);
             const totalTarget = activeTrips.reduce((sum, t) => sum + (t.target_amount || 0), 0);
 
             return {
                 totalSaved,
                 totalTarget,
                 activeGoals: activeTrips.length,
-                completedGoals: trips?.filter(t => t.status === 'completed').length || 0,
+                completedGoals: typedTrips.filter(t => t.status === 'completed').length,
             };
         },
         enabled: !!user,

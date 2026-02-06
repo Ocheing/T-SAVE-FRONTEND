@@ -142,6 +142,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             }
         };
         loadUserCurrency();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const setCurrency = useCallback(async (code: string) => {

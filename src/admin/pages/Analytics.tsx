@@ -26,6 +26,7 @@ import {
     Area,
     AreaChart
 } from "recharts";
+import type { Trip, Transaction } from "@/types/database.types";
 
 interface AnalyticsData {
     totalUsers: number;
@@ -83,8 +84,9 @@ export default function Analytics() {
             ]);
 
             const users = usersRes.data || [];
-            const trips = tripsRes.data || [];
-            const transactions = transactionsRes.data || [];
+            const trips = (tripsRes.data || []) as Trip[];
+            const transactions = (transactionsRes.data || []) as Transaction[];
+
 
             // Calculate totals
             const totalUsers = users.length;
@@ -508,16 +510,29 @@ export default function Analytics() {
 }
 
 // Helper functions
-function getMonthlyGrowth(data: any[], dateField: string, months: number) {
+interface DateRecord {
+    created_at?: string;
+    [key: string]: unknown;
+}
+
+interface TransactionRecord {
+    id: string;
+    amount: number;
+    type: string;
+    created_at: string;
+}
+
+function getMonthlyGrowth(data: DateRecord[], dateField: keyof DateRecord, months: number) {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const result: { month: string; users: number }[] = [];
     const now = new Date();
 
     for (let i = months - 1; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const count = data.filter(item => {
-            const itemDate = new Date(item[dateField]);
+            const fieldValue = item[dateField];
+            if (typeof fieldValue !== 'string') return false;
+            const itemDate = new Date(fieldValue);
             return itemDate.getFullYear() === date.getFullYear() &&
                 itemDate.getMonth() === date.getMonth();
         }).length;
@@ -528,7 +543,7 @@ function getMonthlyGrowth(data: any[], dateField: string, months: number) {
     return result;
 }
 
-function getMonthlySavings(transactions: any[], months: number) {
+function getMonthlySavings(transactions: TransactionRecord[], months: number) {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const result: { month: string; amount: number }[] = [];
     const now = new Date();

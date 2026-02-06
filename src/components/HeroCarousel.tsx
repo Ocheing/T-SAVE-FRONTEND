@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Wallet, TrendingUp, Target } from "lucide-react";
 import { Button } from "./ui/button";
 import heroBeach from "@/assets/hero-beach.jpg";
@@ -6,12 +6,22 @@ import savingsTravel from "@/assets/savings-travel.jpg";
 import mountainAdventure from "@/assets/mountain-adventure.jpg";
 import { useTranslation } from "react-i18next";
 
+// Preload images for smoother transitions
+const preloadImages = [heroBeach, savingsTravel, mountainAdventure];
+if (typeof window !== 'undefined') {
+  preloadImages.forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+}
+
 const HeroCarousel = () => {
   const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const slides = [
+  // Memoize slides to prevent recreation on every render
+  const slides = useMemo(() => [
     {
       image: heroBeach,
       icon: Wallet,
@@ -30,7 +40,28 @@ const HeroCarousel = () => {
       title: t('home.watchDreams'),
       description: t('home.watchDreamsDesc')
     }
-  ];
+  ], [t]);
+
+  // Stable function references with useCallback
+  const handleNext = useCallback(() => {
+    if (!isAnimating) {
+      setIsAnimating(true);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+      setTimeout(() => setIsAnimating(false), 500);
+    }
+  }, [isAnimating, slides.length]);
+
+  const handlePrev = useCallback(() => {
+    if (!isAnimating) {
+      setIsAnimating(true);
+      setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+      setTimeout(() => setIsAnimating(false), 500);
+    }
+  }, [isAnimating, slides.length]);
+
+  const handleDotClick = useCallback((index: number) => {
+    setCurrentSlide(index);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -38,23 +69,7 @@ const HeroCarousel = () => {
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [currentSlide]);
-
-  const handleNext = () => {
-    if (!isAnimating) {
-      setIsAnimating(true);
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-      setTimeout(() => setIsAnimating(false), 500);
-    }
-  };
-
-  const handlePrev = () => {
-    if (!isAnimating) {
-      setIsAnimating(true);
-      setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-      setTimeout(() => setIsAnimating(false), 500);
-    }
-  };
+  }, [handleNext]);
 
   const slide = slides[currentSlide];
   const Icon = slide.icon;
@@ -102,7 +117,7 @@ const HeroCarousel = () => {
         {slides.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentSlide(index)}
+            onClick={() => handleDotClick(index)}
             className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide
               ? 'w-8 bg-primary'
               : 'w-2 bg-primary/30 hover:bg-primary/50'

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { X, Mail, Phone, MapPin, Calendar, CreditCard, Plane, Heart, TrendingUp, Clock, User as UserIcon, BadgeCheck, IdCard } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -66,13 +66,7 @@ export function UserDetailsModal({ userId, isOpen, onClose }: UserDetailsModalPr
     const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (userId && isOpen) {
-            fetchUserDetails();
-        }
-    }, [userId, isOpen]);
-
-    const fetchUserDetails = async () => {
+    const fetchUserDetails = useCallback(async () => {
         if (!userId) return;
 
         setIsLoading(true);
@@ -120,7 +114,13 @@ export function UserDetailsModal({ userId, isOpen, onClose }: UserDetailsModalPr
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [userId]);
+
+    useEffect(() => {
+        if (userId && isOpen) {
+            fetchUserDetails();
+        }
+    }, [userId, isOpen, fetchUserDetails]);
 
     // Subscribe to real-time updates for this specific user
     useEffect(() => {

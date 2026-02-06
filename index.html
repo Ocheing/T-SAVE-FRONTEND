@@ -6,20 +6,97 @@
     <title>TembeaSave - Save for Your Dream Travels</title>
     <meta name="description" content="Start saving for your dream destinations with TembeaSave. Track your progress, set goals, and make your travel dreams come true." />
     <meta name="author" content="TembeaSave" />
-    <meta name="keywords" content="travel savings, vacation fund, trip planning, save money, travel goals" />
+    <meta name="keywords" content="travel savings, vacation fund, trip planning, save money, travel goals, Kenya travel, M-Pesa savings" />
+    
+    <!-- Preconnect to external resources for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
 
+    <!-- Favicon with multiple sizes -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
+    
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#0d1b2a" />
+    <meta name="color-scheme" content="dark" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tembeasave.com/" />
     <meta property="og:title" content="TembeaSave - Save for Your Dream Travels" />
     <meta property="og:description" content="The smart way to save for your travel adventures. Track progress and reach your travel goals." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="https://tembeasave.com/og-image.png" />
+    <meta property="og:site_name" content="TembeaSave" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:url" content="https://tembeasave.com/" />
+    <meta name="twitter:title" content="TembeaSave - Save for Your Dream Travels" />
+    <meta name="twitter:description" content="The smart way to save for your travel adventures. Track progress and reach your travel goals." />
+    <meta name="twitter:image" content="https://tembeasave.com/og-image.png" />
+
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="https://supabase.co" />
+    
+    <!-- Critical CSS for initial paint (prevents FOUC) -->
+    <style>
+      /* Critical above-the-fold CSS */
+      html { background-color: #0d1b2a; }
+      body { 
+        margin: 0; 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background-color: #0d1b2a;
+        color: #f0f4f8;
+      }
+      #root { 
+        min-height: 100vh; 
+        display: flex; 
+        flex-direction: column;
+      }
+      /* Loading spinner for initial load */
+      .initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d1b2a;
+        z-index: 9999;
+      }
+      .initial-loader-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(0, 188, 212, 0.2);
+        border-top-color: #00bcd4;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Initial loader shown until React hydrates -->
+      <div class="initial-loader" id="initial-loader">
+        <div class="initial-loader-spinner"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Remove initial loader once React is ready
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          var loader = document.getElementById('initial-loader');
+          if (loader) loader.style.display = 'none';
+        }, 100);
+      });
+    </script>
   </body>
 </html>

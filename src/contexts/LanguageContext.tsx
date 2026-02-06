@@ -53,6 +53,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
             i18n.changeLanguage(savedLang);
             setLanguageState(savedLang);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Sync with user profile language if logged in
@@ -78,6 +79,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
             }
         };
         loadUserLanguage();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const setLanguage = useCallback(async (code: string) => {

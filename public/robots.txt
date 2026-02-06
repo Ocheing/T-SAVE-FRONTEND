@@ -1,14 +1,21 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# robots.txt for TembeaSave
 User-agent: *
 Allow: /
+
+# Sitemap location
+Sitemap: https://tembeasave.com/sitemap.xml
+
+# Disallow admin routes from indexing
+Disallow: /admin/
+Disallow: /admin
+
+# Allow important pages
+Allow: /auth
+Allow: /trips
+Allow: /popular-destinations
+Allow: /featured-destinations
+
+# Block development files
+Disallow: /*.json$
+Disallow: /src/
+Disallow: /node_modules/

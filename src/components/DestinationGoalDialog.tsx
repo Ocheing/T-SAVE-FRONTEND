@@ -47,7 +47,7 @@ export function DestinationGoalDialog({
 }: DestinationGoalDialogProps) {
     const createTrip = useCreateTrip();
     const { toast } = useToast();
-    const { formatPrice } = useCurrency();
+    const { formatPriceFromKES } = useCurrency();
 
     // Form state - only editable fields
     const [goalType, setGoalType] = useState<"flexible" | "locked">("flexible");
@@ -73,6 +73,7 @@ export function DestinationGoalDialog({
                 if (!monthlyTarget) setMonthlyTarget(monthlySuggested);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [destination, targetDate]);
 
     // Set default target date (3 months from now)
@@ -80,6 +81,7 @@ export function DestinationGoalDialog({
         if (open && !targetDate) {
             setTargetDate(format(addMonths(new Date(), 3), "yyyy-MM-dd"));
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
     // Reset form when dialog closes
@@ -199,7 +201,7 @@ export function DestinationGoalDialog({
                             <div className="flex items-center gap-2 mt-2">
                                 <Badge variant="default" className="text-xs font-black">
                                     <DollarSign className="h-3 w-3 mr-0.5" />
-                                    {formatPrice(Number(destination.estimated_cost))}
+                                    {formatPriceFromKES(Number(destination.estimated_cost))}
                                 </Badge>
                                 {destination.duration && (
                                     <Badge variant="outline" className="text-[10px]">

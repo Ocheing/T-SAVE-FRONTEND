@@ -10,7 +10,7 @@ import heroBeach from "@/assets/hero-beach.jpg";
 const PopularDestinations = () => {
   const navigate = useNavigate();
   const { data: destinations, isLoading } = usePopularDestinations();
-  const { formatPrice } = useCurrency();
+  const { formatPriceFromKES } = useCurrency();
 
   return (
     <div className="min-h-screen py-6">
@@ -85,7 +85,7 @@ const PopularDestinations = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-muted-foreground">From</span>
-                      <span className="text-sm font-bold text-primary">{formatPrice(Number(dest.estimated_cost))}</span>
+                      <span className="text-sm font-bold text-primary">{formatPriceFromKES(Number(dest.estimated_cost))}</span>
                     </div>
                   </div>
 

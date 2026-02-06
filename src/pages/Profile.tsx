@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, Mail, Phone, MapPin, Settings, LogOut, CreditCard, Globe, Bell, DollarSign, Loader2, Save, Camera, Smartphone, Building, Plus, Trash2, Star, Check, Receipt } from "lucide-react";
+import { User, Mail, Phone, MapPin, Settings, LogOut, CreditCard, Globe, Bell, DollarSign, Loader2, Save, Camera, Smartphone, Building, Plus, Trash2, Star, Check, Receipt, Shield, CheckCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,10 +17,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import {
+  usePaymentMethods,
+  useAddPaymentMethod,
+  useDeletePaymentMethod,
+  useSetDefaultPaymentMethod
+} from "@/hooks/usePaymentMethods";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, Link } from "react-router-dom";
+import { validateKenyanPhone, KENYAN_BANKS } from "@/lib/paymentService";
 
 // Comprehensive list of world currencies
 const CURRENCIES = [
@@ -75,20 +83,9 @@ const PAYMENT_ICONS = {
   mpesa: { icon: Smartphone, color: "text-green-600", bg: "bg-green-100", name: "M-Pesa" },
   card: { icon: CreditCard, color: "text-blue-600", bg: "bg-blue-100", name: "Card" },
   bank: { icon: Building, color: "text-purple-600", bg: "bg-purple-100", name: "Bank" },
-};
+} as const;
 
-interface PaymentMethod {
-  id: string;
-  type: 'mpesa' | 'card' | 'bank';
-  name: string;
-  details: {
-    phone?: string;
-    cardNumber?: string;
-    bankName?: string;
-    accountNumber?: string;
-  };
-  is_default: boolean;
-}
+type PaymentType = 'mpesa' | 'card' | 'bank';
 
 const Profile = () => {
   const { profile: authProfile, signOut, user } = useAuth();
@@ -97,6 +94,12 @@ const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Payment methods from database
+  const { data: paymentMethods = [], isLoading: isLoadingPayments } = usePaymentMethods();
+  const addPaymentMethod = useAddPaymentMethod();
+  const deletePaymentMethod = useDeletePaymentMethod();
+  const setDefaultPaymentMethod = useSetDefaultPaymentMethod();
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -114,12 +117,16 @@ const Profile = () => {
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [paymentFormError, setPaymentFormError] = useState<string | null>(null);
   const [newPayment, setNewPayment] = useState({
     type: 'mpesa' as 'mpesa' | 'card' | 'bank',
     name: '',
     phone: '',
     cardNumber: '',
+    expiryMonth: '',
+    expiryYear: '',
+    bankCode: '',
     bankName: '',
     accountNumber: '',
   });
@@ -213,58 +220,124 @@ const Profile = () => {
     });
   };
 
-  const handleAddPayment = () => {
-    const newMethod: PaymentMethod = {
-      id: Date.now().toString(),
-      type: newPayment.type,
-      name: newPayment.name || (
-        newPayment.type === 'mpesa' ? `M-Pesa (${newPayment.phone})` :
-          newPayment.type === 'card' ? `Card ending ${newPayment.cardNumber.slice(-4)}` :
-            `${newPayment.bankName} - ${newPayment.accountNumber.slice(-4)}`
-      ),
-      details: {
-        phone: newPayment.phone,
-        cardNumber: newPayment.cardNumber,
-        bankName: newPayment.bankName,
-        accountNumber: newPayment.accountNumber,
-      },
-      is_default: paymentMethods.length === 0,
-    };
-
-    setPaymentMethods([...paymentMethods, newMethod]);
+  const resetPaymentForm = () => {
     setNewPayment({
       type: 'mpesa',
       name: '',
       phone: '',
       cardNumber: '',
+      expiryMonth: '',
+      expiryYear: '',
+      bankCode: '',
       bankName: '',
       accountNumber: '',
     });
-    setIsPaymentDialogOpen(false);
-
-    toast({
-      title: "Payment method added",
-      description: `${PAYMENT_ICONS[newMethod.type].name} has been added successfully.`,
-    });
+    setPaymentFormError(null);
   };
 
-  const handleRemovePayment = (id: string) => {
-    setPaymentMethods(paymentMethods.filter(p => p.id !== id));
-    toast({
-      title: "Payment method removed",
-      description: "The payment method has been removed.",
-    });
+  const handleAddPayment = async () => {
+    setPaymentFormError(null);
+
+    // Validation based on payment type
+    if (newPayment.type === 'mpesa') {
+      const phoneValidation = validateKenyanPhone(newPayment.phone);
+      if (!phoneValidation.valid) {
+        setPaymentFormError("Please enter a valid Kenyan phone number (e.g., 0712345678)");
+        return;
+      }
+    } else if (newPayment.type === 'card') {
+      if (!newPayment.cardNumber || newPayment.cardNumber.replace(/\s/g, '').length < 13) {
+        setPaymentFormError("Please enter a valid card number");
+        return;
+      }
+    } else if (newPayment.type === 'bank') {
+      if (!newPayment.bankCode || !newPayment.accountNumber) {
+        setPaymentFormError("Please select a bank and enter your account number");
+        return;
+      }
+    }
+
+    setIsAddingPayment(true);
+
+    try {
+      // Prepare the details object based on payment type
+      let details: Record<string, string> = {};
+      let name = newPayment.name;
+
+      if (newPayment.type === 'mpesa') {
+        const { formatted } = validateKenyanPhone(newPayment.phone);
+        details = { phone: formatted };
+        name = name || `M-Pesa (${newPayment.phone})`;
+      } else if (newPayment.type === 'card') {
+        const lastFour = newPayment.cardNumber.replace(/\s/g, '').slice(-4);
+        details = {
+          lastFour,
+          expiryMonth: newPayment.expiryMonth,
+          expiryYear: newPayment.expiryYear,
+        };
+        name = name || `Card ending ${lastFour}`;
+      } else if (newPayment.type === 'bank') {
+        const bank = KENYAN_BANKS.find(b => b.code === newPayment.bankCode);
+        details = {
+          bankCode: newPayment.bankCode,
+          bankName: bank?.name || '',
+          accountNumber: newPayment.accountNumber.slice(-4),
+        };
+        name = name || `${bank?.name || 'Bank'} ****${newPayment.accountNumber.slice(-4)}`;
+      }
+
+      await addPaymentMethod.mutateAsync({
+        type: newPayment.type,
+        name,
+        details,
+        is_default: paymentMethods.length === 0,
+      });
+
+      toast({
+        title: "Payment method added",
+        description: `${PAYMENT_ICONS[newPayment.type].name} has been added successfully.`,
+      });
+
+      resetPaymentForm();
+      setIsPaymentDialogOpen(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to add payment method.";
+      setPaymentFormError(errorMessage);
+    } finally {
+      setIsAddingPayment(false);
+    }
   };
 
-  const handleSetDefault = (id: string) => {
-    setPaymentMethods(paymentMethods.map(p => ({
-      ...p,
-      is_default: p.id === id
-    })));
-    toast({
-      title: "Default updated",
-      description: "Your default payment method has been updated.",
-    });
+  const handleRemovePayment = async (id: string) => {
+    try {
+      await deletePaymentMethod.mutateAsync(id);
+      toast({
+        title: "Payment method removed",
+        description: "The payment method has been removed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove payment method.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      await setDefaultPaymentMethod.mutateAsync(id);
+      toast({
+        title: "Default updated",
+        description: "Your default payment method has been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update default payment method.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getInitials = () => {
@@ -667,16 +740,23 @@ const Profile = () => {
         </div>
 
         {/* Add Payment Method Dialog */}
-        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-          <DialogContent>
+        <Dialog open={isPaymentDialogOpen} onOpenChange={(open) => {
+          setIsPaymentDialogOpen(open);
+          if (!open) resetPaymentForm();
+        }}>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Payment Method</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Add Payment Method
+              </DialogTitle>
               <DialogDescription>
                 Choose how you'd like to add funds to your savings
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
+              {/* Payment Type Selection */}
               <div className="space-y-2">
                 <Label>Payment Type</Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -686,72 +766,197 @@ const Profile = () => {
                       <Button
                         key={type}
                         variant={newPayment.type === type ? 'default' : 'outline'}
-                        className="flex-col h-20"
+                        className={`flex-col h-20 transition-all ${newPayment.type === type ? 'ring-2 ring-primary ring-offset-2' : ''
+                          }`}
                         onClick={() => setNewPayment({ ...newPayment, type })}
                       >
-                        <PayIcon.icon className="h-6 w-6 mb-1" />
-                        <span className="text-xs">{PayIcon.name}</span>
+                        <div className={`p-1.5 rounded-full ${PayIcon.bg} mb-1`}>
+                          <PayIcon.icon className={`h-5 w-5 ${PayIcon.color}`} />
+                        </div>
+                        <span className="text-xs font-medium">{PayIcon.name}</span>
                       </Button>
                     );
                   })}
                 </div>
               </div>
 
+              {/* M-Pesa Fields */}
               {newPayment.type === 'mpesa' && (
-                <div className="space-y-2">
-                  <Label htmlFor="mpesa_phone">M-Pesa Phone Number</Label>
-                  <Input
-                    id="mpesa_phone"
-                    placeholder="+254 7XX XXX XXX"
-                    value={newPayment.phone}
-                    onChange={(e) => setNewPayment({ ...newPayment, phone: e.target.value })}
-                  />
-                </div>
-              )}
-
-              {newPayment.type === 'card' && (
-                <div className="space-y-2">
-                  <Label htmlFor="card_number">Card Number</Label>
-                  <Input
-                    id="card_number"
-                    placeholder="XXXX XXXX XXXX XXXX"
-                    value={newPayment.cardNumber}
-                    onChange={(e) => setNewPayment({ ...newPayment, cardNumber: e.target.value })}
-                  />
-                </div>
-              )}
-
-              {newPayment.type === 'bank' && (
-                <>
+                <div className="space-y-3 animate-in fade-in-50 duration-200">
                   <div className="space-y-2">
-                    <Label htmlFor="bank_name">Bank Name</Label>
+                    <Label htmlFor="mpesa_phone" className="flex items-center gap-2">
+                      <Phone className="h-3 w-3" />
+                      M-Pesa Phone Number
+                    </Label>
                     <Input
-                      id="bank_name"
-                      placeholder="e.g., Equity Bank"
-                      value={newPayment.bankName}
-                      onChange={(e) => setNewPayment({ ...newPayment, bankName: e.target.value })}
+                      id="mpesa_phone"
+                      placeholder="0712 345 678"
+                      value={newPayment.phone}
+                      onChange={(e) => setNewPayment({ ...newPayment, phone: e.target.value })}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your Safaricom M-Pesa registered number
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Card Fields */}
+              {newPayment.type === 'card' && (
+                <div className="space-y-3 animate-in fade-in-50 duration-200">
+                  <div className="space-y-2">
+                    <Label htmlFor="card_number" className="flex items-center gap-2">
+                      <CreditCard className="h-3 w-3" />
+                      Card Number
+                    </Label>
+                    <Input
+                      id="card_number"
+                      placeholder="1234 5678 9012 3456"
+                      value={newPayment.cardNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        const formatted = value.match(/.{1,4}/g)?.join(' ') || '';
+                        setNewPayment({ ...newPayment, cardNumber: formatted.substring(0, 19) });
+                      }}
+                      maxLength={19}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="expiry">Expiry Date</Label>
+                      <div className="flex gap-2">
+                        <Select
+                          value={newPayment.expiryMonth}
+                          onValueChange={(v) => setNewPayment({ ...newPayment, expiryMonth: v })}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="MM" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <SelectItem key={i + 1} value={String(i + 1).padStart(2, '0')}>
+                                {String(i + 1).padStart(2, '0')}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={newPayment.expiryYear}
+                          onValueChange={(v) => setNewPayment({ ...newPayment, expiryYear: v })}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="YY" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 10 }, (_, i) => {
+                              const year = new Date().getFullYear() % 100 + i;
+                              return (
+                                <SelectItem key={year} value={String(year)}>
+                                  {year}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Cardholder Name</Label>
+                      <Input
+                        id="name"
+                        placeholder="John Doe"
+                        value={newPayment.name}
+                        onChange={(e) => setNewPayment({ ...newPayment, name: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bank Fields */}
+              {newPayment.type === 'bank' && (
+                <div className="space-y-3 animate-in fade-in-50 duration-200">
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_select" className="flex items-center gap-2">
+                      <Building className="h-3 w-3" />
+                      Select Bank
+                    </Label>
+                    <Select
+                      value={newPayment.bankCode}
+                      onValueChange={(v) => {
+                        const bank = KENYAN_BANKS.find(b => b.code === v);
+                        setNewPayment({
+                          ...newPayment,
+                          bankCode: v,
+                          bankName: bank?.name || ''
+                        });
+                      }}
+                    >
+                      <SelectTrigger id="bank_select">
+                        <SelectValue placeholder="Choose your bank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <ScrollArea className="h-[200px]">
+                          {KENYAN_BANKS.map((bank) => (
+                            <SelectItem key={bank.code} value={bank.code}>
+                              {bank.name}
+                            </SelectItem>
+                          ))}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="account_number">Account Number</Label>
                     <Input
                       id="account_number"
-                      placeholder="Account number"
+                      placeholder="Enter your account number"
                       value={newPayment.accountNumber}
                       onChange={(e) => setNewPayment({ ...newPayment, accountNumber: e.target.value })}
                     />
                   </div>
-                </>
+                </div>
               )}
+
+              {/* Error Display */}
+              {paymentFormError && (
+                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+                  <Shield className="h-4 w-4" />
+                  {paymentFormError}
+                </div>
+              )}
+
+              {/* Security Note */}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Your payment information is securely stored and encrypted</span>
+              </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsPaymentDialogOpen(false)}
+                disabled={isAddingPayment}
+              >
                 Cancel
               </Button>
-              <Button variant="hero" onClick={handleAddPayment}>
-                <Check className="h-4 w-4 mr-2" />
-                Add Method
+              <Button
+                variant="hero"
+                onClick={handleAddPayment}
+                disabled={isAddingPayment}
+              >
+                {isAddingPayment ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Add Method
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

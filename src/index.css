@@ -90,9 +90,36 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  /* Performance: Use smooth scrolling with reduced motion support */
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Optimize image rendering */
+  img, video {
+    content-visibility: auto;
   }
 }
 
@@ -105,23 +132,70 @@ All colors MUST be HSL.
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-white/5 shadow-lg hover:shadow-cyan-500/10 hover:border-primary/30 transition-all duration-300;
   }
+
+  /* GPU accelerated animations for smoother performance */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+  }
 }
 
-/* Custom Animations */
+/* Custom Animations - Optimized for 60fps */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(10px) translateZ(0); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) translateZ(0); 
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from { 
+    opacity: 0; 
+    transform: scale(0.95) translateZ(0); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateZ(0); 
+  }
+}
+
+@keyframes slide-in {
+  from { 
+    transform: translateX(-100%) translateZ(0); 
+  }
+  to { 
+    transform: translateX(0) translateZ(0); 
+  }
 }
 
 .animate-fade-in {
   animation: fade-in 0.5s ease-out forwards;
+  will-change: opacity, transform;
 }
 
 .animate-scale-in {
   animation: scale-in 0.4s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s ease-out forwards;
+  will-change: transform;
+}
+
+/* Skeleton loading animation for better perceived performance */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, hsl(217, 33%, 17%) 25%, hsl(217, 33%, 22%) 50%, hsl(217, 33%, 17%) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
 }

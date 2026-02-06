@@ -15,7 +15,7 @@ const Trips = () => {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const navigate = useNavigate();
-  const { formatPrice } = useCurrency();
+  const { formatPriceFromKES } = useCurrency();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -117,7 +117,7 @@ const Trips = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] uppercase font-bold text-white/60 mb-0.5">{t('trips.from')}</p>
-                          <Badge className="bg-white text-primary text-lg font-black h-8">{formatPrice(Number(dest.estimated_cost))}</Badge>
+                          <Badge className="bg-white text-primary text-lg font-black h-8">{formatPriceFromKES(Number(dest.estimated_cost))}</Badge>
                         </div>
                       </div>
                     </div>
@@ -155,7 +155,7 @@ const Trips = () => {
 };
 
 const DestinationCard = ({ destination, onStartSaving }: { destination: Destination, onStartSaving: () => void }) => {
-  const { formatPrice } = useCurrency();
+  const { formatPriceFromKES } = useCurrency();
   const { t } = useTranslation();
   return (
     <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-primary/10">
@@ -198,7 +198,7 @@ const DestinationCard = ({ destination, onStartSaving }: { destination: Destinat
         <div className="flex justify-between items-center pt-3 border-t">
           <div>
             <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">{t('wishlist.estimatedCost')}</p>
-            <p className="text-base font-black text-primary">{formatPrice(Number(destination.estimated_cost))}</p>
+            <p className="text-base font-black text-primary">{formatPriceFromKES(Number(destination.estimated_cost))}</p>
           </div>
           <Button
             variant="hero"

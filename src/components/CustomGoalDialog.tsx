@@ -96,6 +96,7 @@ export function CustomGoalDialog({
                 }
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [targetAmount, targetDate]);
 
     // Set default target date
@@ -103,6 +104,7 @@ export function CustomGoalDialog({
         if (open && !targetDate) {
             setTargetDate(format(addMonths(new Date(), 3), "yyyy-MM-dd"));
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
     // Reset form when dialog closes

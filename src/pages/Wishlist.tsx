@@ -15,7 +15,7 @@ const Wishlist = () => {
   const { data: wishlistItems, isLoading } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   const { toast } = useToast();
-  const { formatPrice } = useCurrency();
+  const { formatPriceFromKES } = useCurrency();
   const { t } = useTranslation();
 
   const getImageForCategory = (category: string | null) => {
@@ -129,7 +129,7 @@ const Wishlist = () => {
                       {item.estimated_cost && (
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3 w-3 text-primary" />
-                          <span className="font-semibold">{formatPrice(Number(item.estimated_cost))}</span>
+                          <span className="font-semibold">{formatPriceFromKES(Number(item.estimated_cost))}</span>
                         </div>
                       )}
                       {item.duration && (

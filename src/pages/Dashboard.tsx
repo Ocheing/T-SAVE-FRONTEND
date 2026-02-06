@@ -22,7 +22,7 @@ import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
   const { profile } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatPriceFromKES } = useCurrency();
   const { data: allTrips } = useTrips();
   const { data: tripStats } = useTripStats();
   const { data: transactionStats } = useTransactionStats();
@@ -223,7 +223,7 @@ const Dashboard = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                           <div className="absolute bottom-2 left-3 right-3 flex justify-between items-end text-white">
                             <h3 className="font-bold text-sm truncate mr-2">{dest.name}</h3>
-                            <Badge className="bg-white/90 text-primary hover:bg-white text-[10px] font-bold h-5">{formatPrice(Number(dest.estimated_cost))}</Badge>
+                            <Badge className="bg-white/90 text-primary hover:bg-white text-[10px] font-bold h-5">{formatPriceFromKES(Number(dest.estimated_cost))}</Badge>
                           </div>
                         </div>
                       </Card>

@@ -71,6 +71,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { DestinationGoalDialog } from "@/components/DestinationGoalDialog";
 import { CustomGoalDialog } from "@/components/CustomGoalDialog";
+import PaymentModal from "@/components/PaymentModal";
+import { formatKES, type PaymentResponse } from "@/lib/paymentService";
 import heroBeach from "@/assets/hero-beach.jpg";
 import mountainAdventure from "@/assets/mountain-adventure.jpg";
 import savingsTravel from "@/assets/savings-travel.jpg";
@@ -155,28 +157,30 @@ const TravelGoals = () => {
     }
   };
 
-  const handleAddFunds = async () => {
-    if (!selectedTripId || !depositAmount) return;
+  const handlePaymentSuccess = async (response: PaymentResponse, amountPaid: number) => {
+    if (!selectedTripId) return;
 
     try {
+      // Create the transaction after successful payment
       await createTransaction.mutateAsync({
         trip_id: selectedTripId,
         type: "deposit",
-        amount: parseFloat(depositAmount),
-        description: "Savings deposit",
+        amount: amountPaid,
+        description: `Payment via ${response.transactionId ? response.transactionId.split('-')[0] : 'payment'}`,
       });
 
       toast({
         title: "💰 Funds added!",
-        description: `${formatPrice(parseFloat(depositAmount))} has been added to your savings.`,
+        description: `${formatKES(amountPaid)} has been added to your savings.`,
       });
 
       setDepositAmount("");
       setIsAddFundsDialogOpen(false);
       setSelectedTripId(null);
+      setSelectedTrip(null);
       refetch();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to add funds.";
+      const errorMessage = error instanceof Error ? error.message : "Failed to record transaction.";
       toast({
         title: "Error",
         description: errorMessage,
@@ -395,6 +399,7 @@ const TravelGoals = () => {
                   variant="default"
                   onClick={() => {
                     setSelectedTripId(trip.id);
+                    setSelectedTrip(trip);
                     setIsAddFundsDialogOpen(true);
                   }}
                 >
@@ -667,6 +672,7 @@ const TravelGoals = () => {
                           className="flex-1"
                           onClick={() => {
                             setSelectedTripId(trip.id);
+                            setSelectedTrip(trip);
                             setIsAddFundsDialogOpen(true);
                           }}
                         >
@@ -719,55 +725,124 @@ const TravelGoals = () => {
           onSuccess={() => refetch()}
         />
 
-        {/* Add Funds Dialog */}
-        {/* Add Funds Dialog */}
-        <Dialog open={isAddFundsDialogOpen} onOpenChange={setIsAddFundsDialogOpen}>
-          <DialogContent className="dark:bg-card dark:border-border">
+        {/* Add Funds Dialog - Step 1: Enter Amount */}
+        <Dialog open={isAddFundsDialogOpen && !depositAmount} onOpenChange={(open) => {
+          if (!open) {
+            setIsAddFundsDialogOpen(false);
+            setDepositAmount("");
+            setSelectedTripId(null);
+            setSelectedTrip(null);
+          }
+        }}>
+          <DialogContent className="dark:bg-card dark:border-border sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{t('travelGoals.addFunds')}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                {t('travelGoals.addFunds')}
+              </DialogTitle>
               <DialogDescription>
-                {t('travelGoals.enterAddFundsAmount')}
+                {selectedTrip ? (
+                  <>Adding funds to: <strong>{selectedTrip.destination}</strong></>
+                ) : (
+                  t('travelGoals.enterAddFundsAmount')
+                )}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="py-4">
+            <div className="py-4 space-y-4">
+              {selectedTrip && (
+                <div className="bg-muted/50 p-3 rounded-lg text-sm">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-muted-foreground">Current savings</span>
+                    <span className="font-medium">{formatKES(selectedTrip.saved_amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Target</span>
+                    <span className="font-medium">{formatKES(selectedTrip.target_amount)}</span>
+                  </div>
+                  <Progress
+                    value={Math.min((selectedTrip.saved_amount / selectedTrip.target_amount) * 100, 100)}
+                    className="h-1.5 mt-2"
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="amount">{t('transactions.amount')}</Label>
+                <Label htmlFor="amount">{t('transactions.amount')} (KES)</Label>
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="100"
+                  placeholder="1000"
+                  min="1"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  className="dark:bg-background dark:border-input"
+                  className="dark:bg-background dark:border-input text-lg"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Enter the amount in Kenyan Shillings (KES)
+                </p>
+              </div>
+
+              {/* Quick amount buttons */}
+              <div className="flex flex-wrap gap-2">
+                {[500, 1000, 2500, 5000, 10000].map((amount) => (
+                  <Button
+                    key={amount}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDepositAmount(amount.toString())}
+                    className="text-xs"
+                  >
+                    KES {amount.toLocaleString()}
+                  </Button>
+                ))}
               </div>
             </div>
 
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setIsAddFundsDialogOpen(false)}
+                onClick={() => {
+                  setIsAddFundsDialogOpen(false);
+                  setSelectedTripId(null);
+                  setSelectedTrip(null);
+                }}
               >
                 {t('common.cancel')}
               </Button>
               <Button
                 variant="hero"
-                onClick={handleAddFunds}
-                disabled={createTransaction.isPending || !depositAmount}
+                disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                onClick={() => {
+                  // Amount is set, this will trigger the PaymentModal
+                  // The dialog will close itself
+                }}
               >
-                {createTransaction.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t('common.loading')}
-                  </>
-                ) : (
-                  t('travelGoals.addFunds')
-                )}
+                Continue to Payment
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Payment Modal - Step 2: Process Payment */}
+        <PaymentModal
+          open={isAddFundsDialogOpen && !!depositAmount && parseFloat(depositAmount) > 0}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsAddFundsDialogOpen(false);
+              setDepositAmount("");
+              setSelectedTripId(null);
+              setSelectedTrip(null);
+            }
+          }}
+          amount={parseFloat(depositAmount) || 0}
+          description={selectedTrip ? `Savings for ${selectedTrip.destination}` : 'Add funds to savings'}
+          goalName={selectedTrip?.destination}
+          onSuccess={handlePaymentSuccess}
+          onCancel={() => {
+            setDepositAmount("");
+          }}
+        />
 
         {/* Withdraw Funds Dialog */}
         <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>

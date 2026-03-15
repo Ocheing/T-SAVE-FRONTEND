@@ -27,7 +27,11 @@ const PopularDestinations = lazy(() => import("./pages/PopularDestinations"));
 const FeaturedDestinations = lazy(() => import("./pages/FeaturedDestinations"));
 const TravelGoals = lazy(() => import("./pages/TravelGoals"));
 const Transactions = lazy(() => import("./pages/Transactions"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const HelpCentre = lazy(() => import("./pages/HelpCentre"));
 const ReviewDialog = lazy(() => import("./components/ReviewDialog"));
 
 // Admin Imports - Lazy loaded
@@ -78,6 +82,9 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
           <Route path="/trips" element={<Trips />} />
           <Route path="/popular-destinations" element={<PopularDestinations />} />
           <Route path="/featured-destinations" element={<FeaturedDestinations />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/help" element={<HelpCentre />} />
 
           {/* Auth Routes - Unified login for all users */}
           <Route path="/auth" element={<Auth />} />
@@ -97,6 +104,7 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
           <Route path="/booking/:id" element={<ProtectedRoute><TripBooking /></ProtectedRoute>} />
           <Route path="/travel-goals" element={<ProtectedRoute><TravelGoals /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+          <Route path="/payment/callback" element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />
 
           {/* Admin Routes - Protected by AdminLayout which checks admin role */}
           <Route path="/admin/setup" element={<AdminRoute><AdminSetup /></AdminRoute>} />

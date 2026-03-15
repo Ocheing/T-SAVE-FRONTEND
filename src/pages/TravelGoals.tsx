@@ -71,8 +71,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { DestinationGoalDialog } from "@/components/DestinationGoalDialog";
 import { CustomGoalDialog } from "@/components/CustomGoalDialog";
-import PaymentModal from "@/components/PaymentModal";
-import { formatKES, type PaymentResponse } from "@/lib/paymentService";
+import PaystackPaymentModal from "@/components/PaystackPaymentModal";
+import { formatKES } from "@/lib/paystackService";
 import heroBeach from "@/assets/hero-beach.jpg";
 import mountainAdventure from "@/assets/mountain-adventure.jpg";
 import savingsTravel from "@/assets/savings-travel.jpg";
@@ -157,36 +157,11 @@ const TravelGoals = () => {
     }
   };
 
-  const handlePaymentSuccess = async (response: PaymentResponse, amountPaid: number) => {
-    if (!selectedTripId) return;
-
-    try {
-      // Create the transaction after successful payment
-      await createTransaction.mutateAsync({
-        trip_id: selectedTripId,
-        type: "deposit",
-        amount: amountPaid,
-        description: `Payment via ${response.transactionId ? response.transactionId.split('-')[0] : 'payment'}`,
-      });
-
-      toast({
-        title: "💰 Funds added!",
-        description: `${formatKES(amountPaid)} has been added to your savings.`,
-      });
-
-      setDepositAmount("");
-      setIsAddFundsDialogOpen(false);
-      setSelectedTripId(null);
-      setSelectedTrip(null);
-      refetch();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to record transaction.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
+  const handlePaymentInitiated = (reference: string) => {
+    // Payment has been initiated and user will be redirected to Paystack.
+    // After payment, they return to /payment/callback which handles verification.
+    // The DB function automatically updates savings when payment succeeds.
+    console.log('[TravelGoals] Payment initiated, reference:', reference);
   };
 
   const handleWithdraw = async () => {
@@ -824,8 +799,8 @@ const TravelGoals = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Payment Modal - Step 2: Process Payment */}
-        <PaymentModal
+        {/* Paystack Payment Modal - Step 2: Process Payment */}
+        <PaystackPaymentModal
           open={isAddFundsDialogOpen && !!depositAmount && parseFloat(depositAmount) > 0}
           onOpenChange={(open) => {
             if (!open) {
@@ -838,7 +813,9 @@ const TravelGoals = () => {
           amount={parseFloat(depositAmount) || 0}
           description={selectedTrip ? `Savings for ${selectedTrip.destination}` : 'Add funds to savings'}
           goalName={selectedTrip?.destination}
-          onSuccess={handlePaymentSuccess}
+          tripId={selectedTripId || undefined}
+          paymentType="savings_deposit"
+          onInitiated={handlePaymentInitiated}
           onCancel={() => {
             setDepositAmount("");
           }}

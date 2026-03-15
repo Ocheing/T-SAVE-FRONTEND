@@ -382,6 +382,92 @@ export type Database = {
                     updated_at?: string | null
                 }
             }
+            paystack_payments: {
+                Row: {
+                    id: string
+                    user_id: string
+                    paystack_reference: string
+                    paystack_access_code: string | null
+                    paystack_authorization_url: string | null
+                    paystack_trx_ref: string | null
+                    amount: number
+                    currency: string
+                    email: string
+                    status: 'pending' | 'success' | 'failed' | 'abandoned' | 'reversed'
+                    channel: string | null
+                    card_type: string | null
+                    card_last4: string | null
+                    bank: string | null
+                    trip_id: string | null
+                    booking_id: string | null
+                    payment_type: 'savings_deposit' | 'booking_payment'
+                    description: string | null
+                    metadata: Json
+                    paystack_response: Json
+                    webhook_received_at: string | null
+                    webhook_event: string | null
+                    ip_address: string | null
+                    paid_at: string | null
+                    created_at: string | null
+                    updated_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    paystack_reference: string
+                    paystack_access_code?: string | null
+                    paystack_authorization_url?: string | null
+                    paystack_trx_ref?: string | null
+                    amount: number
+                    currency?: string
+                    email: string
+                    status?: 'pending' | 'success' | 'failed' | 'abandoned' | 'reversed'
+                    channel?: string | null
+                    card_type?: string | null
+                    card_last4?: string | null
+                    bank?: string | null
+                    trip_id?: string | null
+                    booking_id?: string | null
+                    payment_type?: 'savings_deposit' | 'booking_payment'
+                    description?: string | null
+                    metadata?: Json
+                    paystack_response?: Json
+                    webhook_received_at?: string | null
+                    webhook_event?: string | null
+                    ip_address?: string | null
+                    paid_at?: string | null
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    paystack_reference?: string
+                    paystack_access_code?: string | null
+                    paystack_authorization_url?: string | null
+                    paystack_trx_ref?: string | null
+                    amount?: number
+                    currency?: string
+                    email?: string
+                    status?: 'pending' | 'success' | 'failed' | 'abandoned' | 'reversed'
+                    channel?: string | null
+                    card_type?: string | null
+                    card_last4?: string | null
+                    bank?: string | null
+                    trip_id?: string | null
+                    booking_id?: string | null
+                    payment_type?: 'savings_deposit' | 'booking_payment'
+                    description?: string | null
+                    metadata?: Json
+                    paystack_response?: Json
+                    webhook_received_at?: string | null
+                    webhook_event?: string | null
+                    ip_address?: string | null
+                    paid_at?: string | null
+                    created_at?: string | null
+                    updated_at?: string | null
+                }
+            }
         }
         Views: {
             [_ in never]: never
@@ -423,6 +509,13 @@ export type DestinationUpdate = Database['public']['Tables']['destinations']['Up
 export type AppEvent = Database['public']['Tables']['events']['Row']
 export type AppEventInsert = Database['public']['Tables']['events']['Insert']
 export type AppEventUpdate = Database['public']['Tables']['events']['Update']
+
+// Paystack payment types
+export type PaystackPayment = Database['public']['Tables']['paystack_payments']['Row']
+export type PaystackPaymentInsert = Database['public']['Tables']['paystack_payments']['Insert']
+export type PaystackPaymentUpdate = Database['public']['Tables']['paystack_payments']['Update']
+export type PaystackPaymentStatus = 'pending' | 'success' | 'failed' | 'abandoned' | 'reversed'
+export type PaystackPaymentType = 'savings_deposit' | 'booking_payment'
 
 // Enum types
 export type TripCategory = 'beach' | 'mountain' | 'city' | 'adventure' | 'cultural' | 'event'

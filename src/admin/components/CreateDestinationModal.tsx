@@ -269,8 +269,7 @@ export default function CreateDestinationModal({
         setIsSubmitting(true);
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase.from("destinations") as any).insert({
+            const { error } = await supabase.from("destinations").insert({
                 name: formData.name.trim(),
                 location: formData.location.trim() || null,
                 description: formData.description.trim() || null,
@@ -282,25 +281,20 @@ export default function CreateDestinationModal({
                 is_popular: formData.is_popular,
                 popularity_badge: formData.popularity_badge || null,
                 status: formData.status,
-            });
+            } as never);
 
             if (error) {
                 console.error("Insert error:", error);
                 toast.error("Failed to create destination: " + error.message);
+                isSubmittingRef.current = false;
+                setIsSubmitting(false);
                 return;
             }
 
-            // Show success state briefly
-            setSubmitSuccess(true);
             toast.success("Destination created successfully!");
-
-            // Close modal and refresh after brief delay for success animation
-            setTimeout(() => {
-                resetForm();
-                onOpenChange(false);
-                // Notify parent AFTER modal is closed to prevent blocking
-                onSuccess();
-            }, 300);
+            resetForm();
+            onOpenChange(false);
+            onSuccess();
         } catch (error) {
             console.error("Submit error:", error);
             toast.error("An unexpected error occurred");

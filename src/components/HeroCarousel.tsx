@@ -75,7 +75,7 @@ const HeroCarousel = () => {
   const Icon = slide.icon;
 
   return (
-    <div className="relative h-[600px] overflow-hidden rounded-3xl">
+    <div className="relative h-[calc(100vh-57px)] w-full overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center transition-all duration-700"
         style={{

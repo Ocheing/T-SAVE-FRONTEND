@@ -247,8 +247,7 @@ export default function DestinationsManagement() {
     const fetchDestinations = useCallback(async (showRefreshToast = false) => {
         if (showRefreshToast) {
             setIsRefreshing(true);
-        } else if (destinations.length === 0) {
-            // Only show loading state on initial load
+        } else {
             setIsLoading(true);
         }
 
@@ -278,7 +277,7 @@ export default function DestinationsManagement() {
                 setIsRefreshing(false);
             }
         }
-    }, [destinations.length]);
+    }, []);
 
     // Initial load only
     useEffect(() => {
@@ -331,56 +330,59 @@ export default function DestinationsManagement() {
         );
     }, []);
 
-    const handleUpdateStatus = useCallback(async (id: string, status: 'draft' | 'published' | 'archived') => {
+    const handleUpdateStatus = useCallback(async (id: string, newStatus: 'draft' | 'published' | 'archived') => {
+        // Save previous state for rollback
+        const prevDestination = destinations.find(d => d.id === id);
         // Optimistic update
-        optimisticUpdate(id, { status });
+        optimisticUpdate(id, { status: newStatus });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('destinations') as any)
-            .update({ status })
+        const { error } = await supabase
+            .from('destinations')
+            .update({ status: newStatus } as never)
             .eq('id', id);
 
         if (error) {
             toast.error("Update failed: " + error.message);
-            fetchDestinations(); // Revert on error
+            // Revert to previous state instead of full refetch
+            if (prevDestination) optimisticUpdate(id, { status: prevDestination.status });
         } else {
-            toast.success(`Destination ${status} successfully`);
+            toast.success(`Destination ${newStatus} successfully`);
         }
-    }, [optimisticUpdate, fetchDestinations]);
+    }, [destinations, optimisticUpdate]);
 
     const handleToggleFeatured = useCallback(async (destination: Destination) => {
         const newValue = !destination.is_featured;
         optimisticUpdate(destination.id, { is_featured: newValue });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('destinations') as any)
-            .update({ is_featured: newValue })
+        const { error } = await supabase
+            .from('destinations')
+            .update({ is_featured: newValue } as never)
             .eq('id', destination.id);
 
         if (error) {
             toast.error("Update failed: " + error.message);
-            fetchDestinations();
+            optimisticUpdate(destination.id, { is_featured: destination.is_featured });
         } else {
             toast.success(newValue ? "Marked as featured" : "Removed from featured");
         }
-    }, [optimisticUpdate, fetchDestinations]);
+    }, [optimisticUpdate]);
 
     const handleTogglePopular = useCallback(async (destination: Destination) => {
         const newValue = !destination.is_popular;
         optimisticUpdate(destination.id, { is_popular: newValue });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('destinations') as any)
-            .update({ is_popular: newValue })
+        const { error } = await supabase
+            .from('destinations')
+            .update({ is_popular: newValue } as never)
             .eq('id', destination.id);
 
         if (error) {
             toast.error("Update failed: " + error.message);
-            fetchDestinations();
+            optimisticUpdate(destination.id, { is_popular: destination.is_popular });
         } else {
             toast.success(newValue ? "Marked as popular" : "Removed from popular");
         }
-    }, [optimisticUpdate, fetchDestinations]);
+    }, [optimisticUpdate]);
 
     const handleViewClick = useCallback((destination: Destination) => {
         setSelectedDestination(destination);

@@ -281,8 +281,8 @@ export default function EditDestinationModal({
         setIsSubmitting(true);
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase.from("destinations") as any)
+            const { error } = await supabase
+                .from("destinations")
                 .update({
                     name: formData.name.trim(),
                     location: formData.location.trim() || null,
@@ -295,25 +295,21 @@ export default function EditDestinationModal({
                     is_popular: formData.is_popular,
                     popularity_badge: formData.popularity_badge || null,
                     status: formData.status,
-                })
+                } as never)
                 .eq("id", destination.id);
 
             if (error) {
                 console.error("Update error:", error);
                 toast.error("Failed to update destination: " + error.message);
+                isSubmittingRef.current = false;
+                setIsSubmitting(false);
                 return;
             }
 
-            // Show success state briefly
-            setSubmitSuccess(true);
             toast.success("Destination updated successfully!");
-
-            // Close modal and refresh after brief delay
-            setTimeout(() => {
-                setSubmitSuccess(false);
-                onOpenChange(false);
-                onSuccess();
-            }, 300);
+            setSubmitSuccess(false);
+            onOpenChange(false);
+            onSuccess();
         } catch (error) {
             console.error("Submit error:", error);
             toast.error("An unexpected error occurred");

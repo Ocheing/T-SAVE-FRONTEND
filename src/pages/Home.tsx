@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Home = () => {
   const { t } = useTranslation();
+  const { user, isInitialized } = useAuth();
 
   const features = [
     {
@@ -66,12 +68,24 @@ const Home = () => {
             <p className="text-xl text-white/90 mb-8">
               {t('home.joinThousands')}
             </p>
-            <Link to="/auth">
-              <Button variant="secondary" size="lg" className="text-lg">
-                {t('home.createFreeAccount')}
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            {/* Show correct CTA based on auth state — wait for init to avoid flash */}
+            {isInitialized && (
+              user ? (
+                <Link to="/dashboard">
+                  <Button variant="secondary" size="lg" className="text-lg">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="secondary" size="lg" className="text-lg">
+                    {t('home.createFreeAccount')}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              )
+            )}
           </div>
         </div>
       </section>

@@ -12,9 +12,12 @@ export const DESTINATIONS_QUERY_KEYS = {
     published: ['destinations', 'published'] as const,
 };
 
-// Global flag to track if realtime is already set up
-let realtimeSetupCount = 0;
+// Use stable module-level state but with proper cleanup support
+// NOTE: These are module-scoped so they survive HMR — that's intentional.
+// The ref counting ensures we only create 1 channel even with multiple hook instances.
+let realtimeSubscriberCount = 0;
 let globalChannel: RealtimeChannel | null = null;
+let globalQueryClient: import('@tanstack/react-query').QueryClient | null = null;
 
 /**
  * Hook for real-time destination synchronization
@@ -22,56 +25,55 @@ let globalChannel: RealtimeChannel | null = null;
  */
 export function useDestinationsRealtime() {
     const queryClient = useQueryClient();
-    const hasSetupRef = useRef(false);
+    const mountedRef = useRef(false);
 
     useEffect(() => {
-        // Prevent duplicate subscriptions
-        if (hasSetupRef.current) return;
-        hasSetupRef.current = true;
-        realtimeSetupCount++;
+        // Prevent double-registration in React Strict Mode
+        if (mountedRef.current) return;
+        mountedRef.current = true;
 
-        // Only create channel if this is the first subscriber
-        if (realtimeSetupCount === 1 && !globalChannel) {
-            console.log('[Realtime] Setting up destinations channel (first subscriber)');
+        // Always keep queryClient reference up to date
+        globalQueryClient = queryClient;
+        realtimeSubscriberCount++;
+
+        // Only create the channel when this is the first subscriber
+        if (realtimeSubscriberCount === 1 && !globalChannel) {
+            console.log('[Realtime] Setting up destinations channel');
 
             globalChannel = supabase
-                .channel('destinations-realtime-global')
+                .channel(`destinations-realtime-${Date.now()}`)
                 .on(
                     'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'destinations',
-                    },
-                    (payload) => {
-                        console.log('[Realtime] Destination change detected:', payload.eventType);
-
+                    { event: '*', schema: 'public', table: 'destinations' },
+                    () => {
                         // Debounce invalidation to prevent rapid-fire updates
                         setTimeout(() => {
-                            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.all });
-                            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.featured });
-                            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.popular });
-                            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.published });
-                        }, 100);
+                            if (!globalQueryClient) return;
+                            globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.all });
+                            globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.featured });
+                            globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.popular });
+                            globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.published });
+                        }, 150);
                     }
                 )
                 .subscribe((status) => {
-                    console.log('[Realtime] Global subscription status:', status);
+                    console.log('[Realtime] Destinations subscription status:', status);
                 });
         }
 
         return () => {
-            hasSetupRef.current = false;
-            realtimeSetupCount--;
+            mountedRef.current = false;
+            realtimeSubscriberCount = Math.max(0, realtimeSubscriberCount - 1);
 
-            // Only cleanup when last subscriber leaves
-            if (realtimeSetupCount === 0 && globalChannel) {
-                console.log('[Realtime] Cleaning up destinations channel (last subscriber)');
+            if (realtimeSubscriberCount === 0 && globalChannel) {
+                console.log('[Realtime] Cleaning up destinations channel');
                 supabase.removeChannel(globalChannel);
                 globalChannel = null;
+                globalQueryClient = null;
             }
         };
-    }, [queryClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 }
 
 /**

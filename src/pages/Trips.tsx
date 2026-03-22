@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useDestinations } from "@/hooks/useDestinations";
+import { usePublishedDestinations } from "@/hooks/useDestinations";
 import heroBeach from "@/assets/hero-beach.jpg";
 import { useTranslation } from "react-i18next";
 import type { Destination } from "@/types/database.types";
@@ -25,7 +25,7 @@ const Trips = () => {
     }
   }, [searchParams]);
 
-  const { data: allDestinations, isLoading } = useDestinations();
+  const { data: allDestinations, isLoading } = usePublishedDestinations();
 
   const filteredDestinations = (allDestinations || []).filter(dest =>
     dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,8 +75,8 @@ const Trips = () => {
         ) : searchQuery ? (
           <div className="grid md:grid-cols-3 gap-6">
             {filteredDestinations.length > 0 ? (
-              filteredDestinations.map((dest, index) => (
-                <DestinationCard key={index} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
+              filteredDestinations.map((dest) => (
+                <DestinationCard key={dest.id} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
               ))
             ) : (
               <div className="col-span-3 text-center py-20 bg-muted/30 rounded-2xl border-2 border-dashed">
@@ -131,8 +131,8 @@ const Trips = () => {
               <section>
                 <h2 className="text-xl font-bold mb-4">{t('trips.popular')}</h2>
                 <div className="grid md:grid-cols-3 gap-6">
-                  {popularDestinations.map((dest, index) => (
-                    <DestinationCard key={index} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
+                  {popularDestinations.map((dest) => (
+                    <DestinationCard key={dest.id} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
                   ))}
                 </div>
               </section>
@@ -142,8 +142,8 @@ const Trips = () => {
             <section>
               <h2 className="text-xl font-bold mb-4">{t('trips.allDestinations')}</h2>
               <div className="grid md:grid-cols-3 gap-6">
-                {(allDestinations || []).map((dest, index) => (
-                  <DestinationCard key={index} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
+                {(allDestinations || []).map((dest) => (
+                  <DestinationCard key={dest.id} destination={dest} onStartSaving={() => handleStartSaving(dest)} />
                 ))}
               </div>
             </section>

@@ -60,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Use ref to prevent race conditions
     const fetchingRef = useRef(false);
+    // Tracks whether signIn() already fetched user data so onAuthStateChange SIGNED_IN skips re-fetching
+    const manualSignInRef = useRef(false);
 
     const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
         try {
@@ -101,8 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const fetchUserData = useCallback(async (userId: string) => {
-        if (fetchingRef.current) return;
+    const fetchUserData = useCallback(async (userId: string, force = false) => {
+        // Prevent concurrent fetches unless forced
+        if (fetchingRef.current && !force) return;
         fetchingRef.current = true;
 
         try {
@@ -117,13 +120,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('[AuthContext] User data fetched:', { hasProfile: !!profileData, adminRole: role });
         } catch (error) {
             console.error('[AuthContext] Error fetching user data:', error);
-        } finally {
+            // Always reset the ref - even on error - so future fetches aren't permanently blocked
             fetchingRef.current = false;
+            return;
         }
+        // Reset outside catch so it reliably runs after await
+        fetchingRef.current = false;
     }, [fetchProfile, fetchAdminRole]);
 
     const refreshProfile = useCallback(async () => {
         if (user) {
+            // Force refresh: reset the guard so it always runs
+            fetchingRef.current = false;
             await fetchUserData(user.id);
         }
     }, [user, fetchUserData]);
@@ -179,14 +187,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             async (event, newSession) => {
                 if (!mounted) return;
 
-                setSession(newSession);
-                setUser(newSession?.user ?? null);
-
                 if (event === 'SIGNED_OUT') {
+                    // Clear everything immediately on sign out
+                    setSession(null);
+                    setUser(null);
                     setProfile(null);
                     setAdminRole(null);
-                } else if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-                    await fetchUserData(newSession.user.id);
+                    fetchingRef.current = false; // Unblock any pending fetches
+                } else {
+                    setSession(newSession);
+                    setUser(newSession?.user ?? null);
+
+                    if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+                        if (event === 'SIGNED_IN' && manualSignInRef.current) {
+                            // signIn() already fetched profile+role — skip the redundant re-fetch
+                            manualSignInRef.current = false;
+                        } else {
+                            // Normal auth change (e.g., Google OAuth callback, token refresh)
+                            await fetchUserData(newSession.user.id, true);
+                        }
+                    }
                 }
 
                 setIsLoading(false);
@@ -195,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => {
             mounted = false;
+            fetchingRef.current = false; // Reset on unmount so remount works cleanly
             subscription.unsubscribe();
         };
     }, [fetchUserData]);
@@ -233,14 +254,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return { error: null, role: 'user', redirectTo: '/auth' };
             }
 
-            // Immediately fetch role for instant redirect decision
-            // This is crucial for avoiding flicker - we know where to go BEFORE resolving the promise
-            const role = await fetchAdminRole(data.user.id);
-
-            // Update state synchronously
-            setAdminRole(role);
-            setUser(data.user);
+            // Set session first so all subsequent Supabase calls use the fresh JWT
             setSession(data.session);
+            setUser(data.user);
+
+            // Fetch both profile AND role in parallel for instant data population
+            // Use force=true to bypass the concurrent-fetch guard
+            const [profileData, role] = await Promise.all([
+                fetchProfile(data.user.id),
+                fetchAdminRole(data.user.id),
+            ]);
+
+            // Update all state at once so the dashboard has everything on first render
+            setProfile(profileData);
+            setAdminRole(role);
+            // Signal that signIn() already fully populated user data
+            // so onAuthStateChange SIGNED_IN does not re-fetch unnecessarily
+            manualSignInRef.current = true;
 
             // Determine redirect path based on role
             const redirectTo = getRedirectPathForRole(role);
@@ -264,18 +294,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const signOut = async () => {
+        // Clear local state FIRST so UI updates immediately regardless of network
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        setAdminRole(null);
+        fetchingRef.current = false;
+
         try {
+            // Then tell Supabase to invalidate the server session
             await supabase.auth.signOut();
         } catch (error) {
-            console.error('Error signing out:', error);
-        } finally {
-            // Clear local state
-            setUser(null);
-            setSession(null);
-            setProfile(null);
-            setAdminRole(null);
+            // Non-fatal: local state is already cleared, user is effectively logged out
+            console.error('[AuthContext] Error calling supabase.auth.signOut():', error);
         }
-        // Let the UI/ProtectRoute handle the redirect or component unmount
     };
 
     const value = {

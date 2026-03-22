@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -106,12 +106,20 @@ export default function CreateDestinationModal({
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageLoading, setImageLoading] = useState(false);
     const [categoryInput, setCategoryInput] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [formData, setFormData] = useState<DestinationFormData>(initialFormData);
 
     // Prevent duplicate submissions
     const isSubmittingRef = useRef(false);
+    // Debounce timer for URL preview
+    const urlDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Cleanup debounce timer on unmount
+    useEffect(() => () => {
+        if (urlDebounceRef.current) clearTimeout(urlDebounceRef.current);
+    }, []);
 
     const resetForm = useCallback(() => {
         setFormData(initialFormData);
@@ -216,16 +224,26 @@ export default function CreateDestinationModal({
 
     const handleImageUrlInput = useCallback((url: string) => {
         setFormData((prev) => ({ ...prev, image_url: url }));
-        if (url) {
-            setImagePreview(url);
+        // Clear any pending debounce
+        if (urlDebounceRef.current) clearTimeout(urlDebounceRef.current);
+        if (url.trim()) {
+            // Show loading state immediately, but only attempt to load image after 350ms of no typing
+            setImageLoading(true);
+            setImagePreview(null);
+            urlDebounceRef.current = setTimeout(() => {
+                setImagePreview(url.trim());
+            }, 350);
         } else {
             setImagePreview(null);
+            setImageLoading(false);
         }
     }, []);
 
     const removeImage = useCallback(() => {
+        if (urlDebounceRef.current) clearTimeout(urlDebounceRef.current);
         setFormData((prev) => ({ ...prev, image_url: "" }));
         setImagePreview(null);
+        setImageLoading(false);
     }, []);
 
     const addCategory = useCallback((category: string) => {
@@ -292,8 +310,9 @@ export default function CreateDestinationModal({
             }
 
             toast.success("Destination created successfully!");
-            resetForm();
+            // Close immediately for instant UX — realtime subscription updates the list
             onOpenChange(false);
+            resetForm();
             onSuccess();
         } catch (error) {
             console.error("Submit error:", error);
@@ -352,15 +371,23 @@ export default function CreateDestinationModal({
                                 Destination Image
                             </Label>
                             <div className="flex flex-col gap-3">
-                                {imagePreview ? (
+                                {imageLoading && !imagePreview ? (
+                                    <div className="w-full h-48 rounded-lg border bg-muted flex items-center justify-center">
+                                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                        <span className="ml-2 text-sm text-muted-foreground">Loading preview...</span>
+                                    </div>
+                                ) : imagePreview ? (
                                     <div className="relative w-full h-48 rounded-lg overflow-hidden border bg-muted">
                                         <img
                                             src={imagePreview}
                                             alt="Preview"
                                             className="w-full h-full object-cover"
+                                            crossOrigin="anonymous"
+                                            onLoad={() => setImageLoading(false)}
                                             onError={() => {
                                                 setImagePreview(null);
-                                                toast.error("Failed to load image preview");
+                                                setImageLoading(false);
+                                                toast.error("Could not load image from this URL. Try a direct image link (ending in .jpg, .png, etc.)");
                                             }}
                                         />
                                         <Button

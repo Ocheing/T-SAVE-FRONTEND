@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute, { AdminRoute } from "@/components/ProtectedRoute";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -53,16 +53,15 @@ const PageLoader = () => (
   </div>
 );
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes (previously cacheTime)
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+// Scroll to top on every route change
+// — prevents back/forward from leaving the page scrolled to a random position
+const ScrollRestoration = () => {
+  const location = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.pathname]);
+  return null;
+};
 
 const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () => void }) => {
   const location = useLocation();
@@ -74,6 +73,8 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+      {/* Scroll to top on every navigation */}
+      <ScrollRestoration />
       {!hideNavbar && <Navbar onThemeToggle={toggleTheme} isDark={isDark} isHomePage={isHomePage} />}
       <Suspense fallback={<PageLoader />}>
         <Routes>
@@ -145,8 +146,28 @@ const App = () => {
     document.documentElement.classList.add("dark");
   };
 
+  // Create QueryClient once per app instance using useRef
+  // This prevents HMR from sharing a stale client across hot-reloads
+  const queryClientRef = useRef<QueryClient | null>(null);
+  if (!queryClientRef.current) {
+    queryClientRef.current = new QueryClient({
+      defaultOptions: {
+        queries: {
+          // staleTime=0 means data is always considered stale → fetches on mount
+          // Individual hooks override this with their own staleTime where appropriate
+          staleTime: 0,
+          gcTime: 1000 * 60 * 30, // 30 minutes
+          retry: 2,
+          retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+          refetchOnWindowFocus: false,
+          refetchOnMount: true,
+        },
+      },
+    });
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClientRef.current}>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />

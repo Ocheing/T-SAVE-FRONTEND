@@ -192,9 +192,13 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
     : displayUser.firstName.slice(0, 2).toUpperCase();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/');
     setIsMenuOpen(false);
+    try {
+      await signOut();
+    } finally {
+      // Always navigate home regardless of signOut success/failure
+      navigate('/', { replace: true });
+    }
   };
 
   const selectedLanguage = LANGUAGES.find(l => l.code === i18n.language) || LANGUAGES[0];
@@ -282,87 +286,93 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
               <Menu className="h-4 w-4" />
             </Button>
 
-            {isHomePage || !user ? (
-              <Link to="/auth" className="hidden md:block">
-                <Button variant="hero" size="sm">{user ? 'Dashboard' : 'Get Started'}</Button>
-              </Link>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild className="hidden md:flex">
-                  <Button variant="outline" size="sm" className="h-8 px-2 gap-1">
-                    <span className="text-xs font-semibold">{userInitials}</span>
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel className="text-xs">
-                    <div className="font-normal text-muted-foreground">Signed in as</div>
-                    <div className="font-semibold">{displayUser.firstName} {displayUser.lastName}</div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {isAdmin && (
+            {/* CTA Button + User Menu */}
+            {user ? (
+              <>
+                <Link to="/dashboard" className="hidden md:block">
+                  <Button variant="hero" size="sm">Dashboard</Button>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild className="hidden md:flex">
+                    <Button variant="outline" size="sm" className="h-8 px-2 gap-1">
+                      <span className="text-xs font-semibold">{userInitials}</span>
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel className="text-xs">
+                      <div className="font-normal text-muted-foreground">Signed in as</div>
+                      <div className="font-semibold">{displayUser.firstName} {displayUser.lastName}</div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/dashboard" className="cursor-pointer text-xs font-semibold text-primary">
+                          <ShieldCheck className="h-3 w-3 mr-2" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
-                      <Link to="/admin/dashboard" className="cursor-pointer text-xs font-semibold text-primary">
-                        <ShieldCheck className="h-3 w-3 mr-2" />
-                        Admin Panel
+                      <Link to="/" className="cursor-pointer text-xs">
+                        <Home className="h-3 w-3 mr-2" />
+                        Home
                       </Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem asChild>
-                    <Link to="/" className="cursor-pointer text-xs">
-                      <Home className="h-3 w-3 mr-2" />
-                      Home
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer text-xs">
-                      <LayoutDashboard className="h-3 w-3 mr-2" />
-                      {t('nav.dashboard')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/trips" className="cursor-pointer text-xs">
-                      <Plane className="h-3 w-3 mr-2" />
-                      {t('nav.trips')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/wishlist" className="cursor-pointer text-xs">
-                      <Heart className="h-3 w-3 mr-2" />
-                      {t('nav.wishlist')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/bookings" className="cursor-pointer text-xs">
-                      <Calendar className="h-3 w-3 mr-2" />
-                      {t('nav.bookings')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/transactions" className="cursor-pointer text-xs">
-                      <Receipt className="h-3 w-3 mr-2" />
-                      Transactions
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/chat" className="cursor-pointer text-xs">
-                      <Bot className="h-3 w-3 mr-2" />
-                      {t('nav.chat')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer text-xs">
-                      <User className="h-3 w-3 mr-2" />
-                      {t('nav.profile')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer text-xs">
-                    <LogOut className="h-3 w-3 mr-2" />
-                    {t('nav.logout')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="cursor-pointer text-xs">
+                        <LayoutDashboard className="h-3 w-3 mr-2" />
+                        {t('nav.dashboard')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/trips" className="cursor-pointer text-xs">
+                        <Plane className="h-3 w-3 mr-2" />
+                        {t('nav.trips')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/wishlist" className="cursor-pointer text-xs">
+                        <Heart className="h-3 w-3 mr-2" />
+                        {t('nav.wishlist')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/bookings" className="cursor-pointer text-xs">
+                        <Calendar className="h-3 w-3 mr-2" />
+                        {t('nav.bookings')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/transactions" className="cursor-pointer text-xs">
+                        <Receipt className="h-3 w-3 mr-2" />
+                        Transactions
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/chat" className="cursor-pointer text-xs">
+                        <Bot className="h-3 w-3 mr-2" />
+                        {t('nav.chat')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer text-xs">
+                        <User className="h-3 w-3 mr-2" />
+                        {t('nav.profile')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer text-xs">
+                      <LogOut className="h-3 w-3 mr-2" />
+                      {t('nav.logout')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Link to="/auth" className="hidden md:block">
+                <Button variant="hero" size="sm">Get Started</Button>
+              </Link>
             )}
           </div>
         </div>

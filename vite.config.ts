@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  preview: {
+    // SPA routing: serve index.html for all routes in `vite preview`
+    host: "::",
+    port: 8080,
+  },
+  // Explicit cache location — easy to clear: remove node_modules/.vite
+  cacheDir: "node_modules/.vite",
   plugins: [react()].filter(Boolean),
   resolve: {
     alias: {

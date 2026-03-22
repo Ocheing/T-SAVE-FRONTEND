@@ -243,6 +243,8 @@ export default function DestinationsManagement() {
 
     // Track if component is mounted to prevent state updates after unmount
     const isMountedRef = useRef(true);
+    // Unique channel ID per mount to prevent stale channel reuse
+    const channelIdRef = useRef(`admin-destinations-${Date.now()}`);
 
     const fetchDestinations = useCallback(async (showRefreshToast = false) => {
         if (showRefreshToast) {
@@ -290,8 +292,9 @@ export default function DestinationsManagement() {
 
     // Single real-time subscription for the entire page
     useEffect(() => {
+        const channelName = channelIdRef.current;
         const channel = supabase
-            .channel('admin-destinations-realtime')
+            .channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -300,6 +303,7 @@ export default function DestinationsManagement() {
                     table: 'destinations',
                 },
                 (payload) => {
+                    if (!isMountedRef.current) return;
                     console.log('[Admin Realtime] Destination change:', payload.eventType);
 
                     // Update local state optimistically based on event type
@@ -321,7 +325,7 @@ export default function DestinationsManagement() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Optimistic update helper
     const optimisticUpdate = useCallback((id: string, updates: Partial<Destination>) => {

@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTrips, useTripStats } from "@/hooks/useTrips";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTransactionStats } from "@/hooks/useTransactions";
-import { useDestinations } from "@/hooks/useDestinations";
+import { usePublishedDestinations } from "@/hooks/useDestinations";
 import { useRecommendedEvents } from "@/hooks/useEvents";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ const Dashboard = () => {
   const { data: allTrips } = useTrips();
   const { data: tripStats } = useTripStats();
   const { data: transactionStats } = useTransactionStats();
-  const { data: destinations, isLoading: isLoadingDestinations } = useDestinations();
+  const { data: destinations, isLoading: isLoadingDestinations } = usePublishedDestinations();
   const { t } = useTranslation();
 
   const userName = profile?.full_name?.split(' ')[0] || 'Traveler';

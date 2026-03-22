@@ -22,18 +22,39 @@ import { useTranslation } from "react-i18next";
  */
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
+
+  // --- Sign In fields ---
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  // --- Sign Up fields ---
+  const [signupEmail, setSignupEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [idNumber, setIdNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("+254");
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [currentTab, setCurrentTab] = useState("login");
   const [signupSuccess, setSignupSuccess] = useState(false);
-  const [countryCode, setCountryCode] = useState("+254");
+
+  /** Resets every form field back to its default empty state */
+  const resetAllFields = () => {
+    setLoginEmail("");
+    setLoginPassword("");
+    setSignupEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setFullName("");
+    setPhone("");
+    setIdNumber("");
+    setCountryCode("+254");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
 
   const { signIn, signUp, signInWithGoogle, user, isInitialized, getRedirectPath } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +64,14 @@ const Auth = () => {
 
   // Get intended destination from location state (for protected route redirects)
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+
+  // Reset all fields on every navigation to this page (fresh state on each visit)
+  useEffect(() => {
+    resetAllFields();
+    setCurrentTab("login");
+    setSignupSuccess(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   // If already logged in, redirect immediately based on role
   useEffect(() => {
@@ -74,14 +103,15 @@ const Auth = () => {
 
     try {
       // signIn returns role and redirectTo immediately
-      const { error, role, redirectTo } = await signIn(email, password);
+      const { error, role, redirectTo } = await signIn(loginEmail, loginPassword);
 
       if (error) {
         toast({
-          title: t('common.error'), // Or specific "Login failed" if you add it
+          title: t('common.error'),
           description: error.message,
           variant: "destructive",
         });
+        resetAllFields();
         setIsLoading(false);
         return;
       }
@@ -90,6 +120,7 @@ const Auth = () => {
         title: t('auth.loginSuccess'),
       });
 
+      resetAllFields();
       // Instant redirect - no waiting for state updates
       navigate(from || redirectTo, { replace: true });
 
@@ -99,6 +130,7 @@ const Auth = () => {
         description: t('messages.somethingWentWrong'),
         variant: "destructive",
       });
+      resetAllFields();
       setIsLoading(false);
     }
   };
@@ -112,6 +144,7 @@ const Auth = () => {
         description: t('auth.passwordsNoMatchDesc'),
         variant: "destructive",
       });
+      resetAllFields();
       return;
     }
 
@@ -121,6 +154,7 @@ const Auth = () => {
         description: t('auth.passwordShortDesc'),
         variant: "destructive",
       });
+      resetAllFields();
       return;
     }
 
@@ -128,7 +162,7 @@ const Auth = () => {
 
     try {
       const fullPhone = `${countryCode}${phone}`;
-      const { error } = await signUp(email, password, fullName, fullPhone, idNumber);
+      const { error } = await signUp(signupEmail, password, fullName, fullPhone, idNumber);
 
       if (error) {
         if (error.message.toLowerCase().includes("already registered") ||
@@ -138,6 +172,7 @@ const Auth = () => {
             description: t('auth.accountExistsDesc'),
             variant: "destructive",
           });
+          resetAllFields();
           setCurrentTab("login");
           setIsLoading(false);
           return;
@@ -147,11 +182,13 @@ const Auth = () => {
           description: error.message,
           variant: "destructive",
         });
+        resetAllFields();
       } else {
         toast({
           title: t('auth.signupSuccess'),
-          description: t('auth.verificationDesc', { email }),
+          description: t('auth.verificationDesc', { email: signupEmail }),
         });
+        resetAllFields();
         setSignupSuccess(true);
         setCurrentTab("login");
       }
@@ -161,6 +198,7 @@ const Auth = () => {
         description: t('messages.somethingWentWrong'),
         variant: "destructive",
       });
+      resetAllFields();
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +268,7 @@ const Auth = () => {
             </span>
           </div>
 
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <Tabs value={currentTab} onValueChange={(tab) => { resetAllFields(); setCurrentTab(tab); }} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login" className="text-xs">{t('auth.signIn')}</TabsTrigger>
               <TabsTrigger value="signup" className="text-xs">{t('auth.signUp')}</TabsTrigger>
@@ -248,8 +286,9 @@ const Auth = () => {
                     type="email"
                     placeholder="your.email@example.com"
                     className="h-9 text-sm"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -265,8 +304,9 @@ const Auth = () => {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       className="h-9 text-sm pr-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      autoComplete="off"
                       required
                     />
                     <button
@@ -284,9 +324,13 @@ const Auth = () => {
                     <input type="checkbox" className="rounded h-3 w-3" />
                     <span>{t('auth.rememberMe')}</span>
                   </label>
-                  <a href="#" className="text-primary hover:underline">
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.preventDefault(); toast({ title: "Coming Soon", description: "Password reset will be available shortly." }); }}
+                    className="text-primary hover:underline bg-transparent border-none p-0"
+                  >
                     {t('auth.forgotPassword')}
-                  </a>
+                  </button>
                 </div>
 
                 <Button
@@ -357,8 +401,9 @@ const Auth = () => {
                       type="email"
                       placeholder="your.email@example.com"
                       className="h-9 text-sm"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      autoComplete="off"
                       required
                     />
                   </div>

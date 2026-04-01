@@ -2,6 +2,7 @@ import { Moon, Sun, Menu, Home, LayoutDashboard, Plane, Heart, User, MessageCirc
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import ReviewDialog, { hasAlreadyReviewed } from "@/components/ReviewDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -109,7 +110,6 @@ interface NavbarProps {
 
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
-
 import { supabase } from "@/lib/supabase";
 
 const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
@@ -120,6 +120,8 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
   const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [pendingLogout, setPendingLogout] = useState(false);
 
   // Load preferences from profile or localStorage
   useEffect(() => {
@@ -158,18 +160,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
   };
 
   const handleCurrencyChange = async (code: string) => {
-    setCurrency(code);
-    localStorage.setItem('tembea_currency', code);
-
-    if (user) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.from('profiles') as any).update({ currency: code }).eq('id', user.id);
-      } catch (error) {
-        console.error('Error updating currency preference:', error);
-      }
-    }
-
+    await setCurrency(code); // handles localStorage + DB persistence via CurrencyContext
     const currName = CURRENCIES.find(c => c.code === code)?.name || code;
     toast({
       title: "Currency Updated",
@@ -191,13 +182,31 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
     ? `${displayUser.firstName[0]}${displayUser.lastName[0]}`.toUpperCase()
     : displayUser.firstName.slice(0, 2).toUpperCase();
 
-  const handleLogout = async () => {
-    setIsMenuOpen(false);
+  const doSignOut = async () => {
+    setPendingLogout(false);
     try {
       await signOut();
     } finally {
-      // Always navigate home regardless of signOut success/failure
       navigate('/', { replace: true });
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsMenuOpen(false);
+
+    if (!user) {
+      await doSignOut();
+      return;
+    }
+
+    // Check if user has already submitted a review (localStorage fast-path + DB fallback)
+    const reviewed = await hasAlreadyReviewed(user.id);
+    if (!reviewed) {
+      // Show review popup; actual logout happens after user submits/skips (onDone)
+      setPendingLogout(true);
+      setShowReviewDialog(true);
+    } else {
+      await doSignOut();
     }
   };
 
@@ -205,6 +214,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
   const selectedCurrency = CURRENCIES.find(c => c.code === currency);
 
   return (
+    <>
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between gap-4">
@@ -452,7 +462,17 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
           </div>
         )}
       </div>
-    </nav >
+    </nav>
+
+      {/* Review Dialog — shown once on first logout, before signing out */}
+      <ReviewDialog
+        open={showReviewDialog}
+        onOpenChange={setShowReviewDialog}
+        onDone={() => {
+          if (pendingLogout) doSignOut();
+        }}
+      />
+    </>
   );
 };
 

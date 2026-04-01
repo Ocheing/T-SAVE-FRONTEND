@@ -9,7 +9,7 @@ export interface Currency {
     flag: string;
 }
 
-// Comprehensive currency list with exchange rates (Base: USD)
+// Comprehensive currency list
 export const CURRENCIES: Currency[] = [
     { code: "KES", name: "Kenyan Shilling", symbol: "KSh", flag: "🇰🇪" },
     { code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸" },
@@ -52,56 +52,78 @@ export const CURRENCIES: Currency[] = [
     { code: "ILS", name: "Israeli Shekel", symbol: "₪", flag: "🇮🇱" },
 ];
 
-// Exchange rates relative to USD (approximations)
-const EXCHANGE_RATES: Record<string, number> = {
-    USD: 1,
-    KES: 129.50,
-    EUR: 0.92,
-    GBP: 0.78,
-    JPY: 150.2,
-    CAD: 1.35,
-    AUD: 1.52,
-    CHF: 0.88,
-    CNY: 7.24,
-    INR: 83.12,
-    ZAR: 18.8,
-    AED: 3.67,
-    SAR: 3.75,
-    NGN: 1450,
-    GHS: 12.5,
-    TZS: 2550,
-    UGX: 3800,
-    RWF: 1280,
-    ETB: 56.5,
-    EGP: 30.9,
-    MAD: 10.1,
-    BRL: 4.97,
-    MXN: 17.15,
-    KRW: 1320,
-    SGD: 1.34,
-    HKD: 7.82,
-    THB: 35.5,
-    MYR: 4.72,
-    IDR: 15650,
-    PHP: 56.2,
-    VND: 24300,
-    RUB: 91.5,
-    TRY: 32.1,
-    PLN: 3.98,
-    SEK: 10.45,
-    NOK: 10.68,
-    DKK: 6.86,
-    NZD: 1.64,
-    ILS: 3.71,
+/**
+ * Exchange rates relative to KES (the app's base currency).
+ * All financial data in the database is stored in KES.
+ * To convert: multiply KES amount by the rate for the target currency.
+ * 
+ * E.g., 1 KES = 0.00772 USD, so USD rate = 0.00772
+ *       1 KES = 1 KES, so KES rate = 1
+ */
+const KES_TO_CURRENCY_RATES: Record<string, number> = {
+    KES: 1,
+    USD: 0.00772,    // 1 KES ≈ 0.00772 USD (rate: ~129.5 KES/USD)
+    EUR: 0.00710,    // 1 KES ≈ 0.00710 EUR
+    GBP: 0.00602,    // 1 KES ≈ 0.00602 GBP
+    JPY: 1.1599,     // 1 KES ≈ 1.16 JPY
+    CAD: 0.01043,    // 1 KES ≈ 0.01043 CAD
+    AUD: 0.01174,    // 1 KES ≈ 0.01174 AUD
+    CHF: 0.00679,    // 1 KES ≈ 0.00679 CHF
+    CNY: 0.05590,    // 1 KES ≈ 0.0559 CNY
+    INR: 0.64169,    // 1 KES ≈ 0.642 INR
+    ZAR: 0.14517,    // 1 KES ≈ 0.145 ZAR
+    AED: 0.02835,    // 1 KES ≈ 0.0284 AED
+    SAR: 0.02896,    // 1 KES ≈ 0.029 SAR
+    NGN: 11.200,     // 1 KES ≈ 11.2 NGN
+    GHS: 0.09652,    // 1 KES ≈ 0.097 GHS
+    TZS: 19.691,     // 1 KES ≈ 19.7 TZS
+    UGX: 29.344,     // 1 KES ≈ 29.3 UGX
+    RWF: 9.884,      // 1 KES ≈ 9.88 RWF
+    ETB: 0.43630,    // 1 KES ≈ 0.436 ETB
+    EGP: 0.23868,    // 1 KES ≈ 0.239 EGP
+    MAD: 0.07801,    // 1 KES ≈ 0.078 MAD
+    BRL: 0.03836,    // 1 KES ≈ 0.0384 BRL
+    MXN: 0.13244,    // 1 KES ≈ 0.132 MXN
+    KRW: 10.193,     // 1 KES ≈ 10.2 KRW
+    SGD: 0.01035,    // 1 KES ≈ 0.0103 SGD
+    HKD: 0.06037,    // 1 KES ≈ 0.060 HKD
+    THB: 0.27412,    // 1 KES ≈ 0.274 THB
+    MYR: 0.03645,    // 1 KES ≈ 0.0365 MYR
+    IDR: 120.85,     // 1 KES ≈ 120.85 IDR
+    PHP: 0.43398,    // 1 KES ≈ 0.434 PHP
+    VND: 187.64,     // 1 KES ≈ 187.6 VND
+    RUB: 0.70657,    // 1 KES ≈ 0.707 RUB
+    TRY: 0.24786,    // 1 KES ≈ 0.248 TRY
+    PLN: 0.03072,    // 1 KES ≈ 0.0307 PLN
+    SEK: 0.08069,    // 1 KES ≈ 0.0807 SEK
+    NOK: 0.08246,    // 1 KES ≈ 0.0825 NOK
+    DKK: 0.05298,    // 1 KES ≈ 0.053 DKK
+    NZD: 0.01267,    // 1 KES ≈ 0.0127 NZD
+    ILS: 0.02865,    // 1 KES ≈ 0.0286 ILS
 };
+
+/** Zero-decimal currencies (no cents) */
+const ZERO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW', 'VND', 'IDR', 'UGX', 'RWF', 'TZS', 'NGN']);
 
 interface CurrencyContextType {
     currency: string;
     setCurrency: (code: string) => Promise<void>;
     currencies: Currency[];
     currentCurrency: Currency;
-    formatPrice: (amountInUSD: number) => string;
-    convertPrice: (amountInUSD: number) => number;
+    /**
+     * Format a KES amount in the user's selected currency.
+     * All financial data in the app is stored in KES, so this is the primary format function.
+     * Use for: saved_amount, target_amount, transaction amounts, event prices, destination costs, etc.
+     */
+    formatPrice: (amountInKES: number) => string;
+    /**
+     * Convert a KES amount to the user's selected currency (returns raw number, no formatting).
+     */
+    convertPrice: (amountInKES: number) => number;
+    /**
+     * Alias for formatPrice — both accept KES amounts.
+     * Kept for backward compatibility with components that explicitly receive KES values.
+     */
     formatPriceFromKES: (amountInKES: number) => string;
     convertFromKES: (amountInKES: number) => number;
 }
@@ -110,35 +132,37 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
+    // Default to KES — the app's base currency
     const [currency, setCurrencyState] = useState("KES");
 
-    // Load saved currency on mount
+    // Load saved currency on mount (localStorage → fallback KES)
     useEffect(() => {
         const savedCurrency = localStorage.getItem('tembea_currency');
-        if (savedCurrency) {
+        if (savedCurrency && KES_TO_CURRENCY_RATES[savedCurrency]) {
             setCurrencyState(savedCurrency);
         }
+        // If nothing saved, stay as KES (already the default)
     }, []);
 
-    // Sync with user profile currency if logged in
+    // Sync with user profile currency when logged in
     useEffect(() => {
         const loadUserCurrency = async () => {
-            if (user) {
-                try {
-                    const { data } = await supabase
-                        .from('profiles')
-                        .select('currency')
-                        .eq('id', user.id)
-                        .single();
+            if (!user) return;
+            try {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('currency')
+                    .eq('id', user.id)
+                    .single();
 
-                    const profileData = data as { currency: string | null } | null;
-                    if (profileData?.currency && profileData.currency !== currency) {
-                        setCurrencyState(profileData.currency.toUpperCase());
-                        localStorage.setItem('tembea_currency', profileData.currency.toUpperCase());
-                    }
-                } catch (error) {
-                    console.error('Error loading user currency:', error);
+                const profileData = data as { currency: string | null } | null;
+                const profileCurrency = profileData?.currency?.toUpperCase();
+                if (profileCurrency && profileCurrency !== currency && KES_TO_CURRENCY_RATES[profileCurrency]) {
+                    setCurrencyState(profileCurrency);
+                    localStorage.setItem('tembea_currency', profileCurrency);
                 }
+            } catch (error) {
+                console.error('Error loading user currency:', error);
             }
         };
         loadUserCurrency();
@@ -146,11 +170,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }, [user]);
 
     const setCurrency = useCallback(async (code: string) => {
-        // Instant UI update
         setCurrencyState(code);
         localStorage.setItem('tembea_currency', code);
 
-        // Persist to database if user is logged in
         if (user) {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -163,63 +185,43 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         }
     }, [user]);
 
-    // Convert from USD to selected currency
-    const convertPrice = useCallback((amountInUSD: number): number => {
-        const rate = EXCHANGE_RATES[currency] || 1;
-        return amountInUSD * rate;
+    /**
+     * Convert a KES amount to the selected currency.
+     * KES is the canonical base currency for all stored values.
+     */
+    const convertPrice = useCallback((amountInKES: number): number => {
+        const rate = KES_TO_CURRENCY_RATES[currency] ?? 1;
+        return amountInKES * rate;
     }, [currency]);
 
-    // Format price from USD
-    const formatPrice = useCallback((amountInUSD: number): string => {
-        const converted = convertPrice(amountInUSD);
+    // convertFromKES is the same as convertPrice — alias for clarity
+    const convertFromKES = convertPrice;
+
+    /**
+     * Format a KES amount in the user's selected display currency.
+     * This is the primary formatting function for all monetary values in the app.
+     */
+    const formatPrice = useCallback((amountInKES: number): string => {
+        const converted = convertPrice(amountInKES);
+        const isZeroDecimal = ZERO_DECIMAL_CURRENCIES.has(currency);
         try {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: currency,
-                maximumFractionDigits: currency === 'JPY' || currency === 'KRW' || currency === 'VND' ? 0 : 2,
-                minimumFractionDigits: 0
+                maximumFractionDigits: isZeroDecimal ? 0 : 2,
+                minimumFractionDigits: 0,
             }).format(converted);
         } catch {
-            // Fallback for unsupported currencies
+            // Fallback for any currency code not supported by Intl
             const curr = CURRENCIES.find(c => c.code === currency);
-            return `${curr?.symbol || currency} ${converted.toLocaleString()}`;
+            return `${curr?.symbol ?? currency} ${converted.toLocaleString()}`;
         }
     }, [currency, convertPrice]);
 
-    // Convert from KES to selected currency (many prices in app are in KES)
-    const convertFromKES = useCallback((amountInKES: number): number => {
-        // First convert KES to USD, then to target currency
-        const kesRate = EXCHANGE_RATES['KES'] || 129.50;
-        const amountInUSD = amountInKES / kesRate;
-        return convertPrice(amountInUSD);
-    }, [convertPrice]);
+    // formatPriceFromKES is an exact alias for formatPrice (same KES-based logic)
+    const formatPriceFromKES = formatPrice;
 
-    // Format price from KES
-    const formatPriceFromKES = useCallback((amountInKES: number): string => {
-        // If target is KES, just format directly
-        if (currency === 'KES') {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'KES',
-                maximumFractionDigits: 0
-            }).format(amountInKES);
-        }
-
-        const converted = convertFromKES(amountInKES);
-        try {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency,
-                maximumFractionDigits: currency === 'JPY' || currency === 'KRW' || currency === 'VND' ? 0 : 2,
-                minimumFractionDigits: 0
-            }).format(converted);
-        } catch {
-            const curr = CURRENCIES.find(c => c.code === currency);
-            return `${curr?.symbol || currency} ${converted.toLocaleString()}`;
-        }
-    }, [currency, convertFromKES]);
-
-    const currentCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
+    const currentCurrency = CURRENCIES.find(c => c.code === currency) ?? CURRENCIES[0];
 
     return (
         <CurrencyContext.Provider value={{
@@ -230,7 +232,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             formatPrice,
             convertPrice,
             formatPriceFromKES,
-            convertFromKES
+            convertFromKES,
         }}>
             {children}
         </CurrencyContext.Provider>

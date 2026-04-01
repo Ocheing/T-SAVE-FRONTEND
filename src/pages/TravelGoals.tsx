@@ -72,7 +72,7 @@ import { useTranslation } from "react-i18next";
 import { DestinationGoalDialog } from "@/components/DestinationGoalDialog";
 import { CustomGoalDialog } from "@/components/CustomGoalDialog";
 import PaystackPaymentModal from "@/components/PaystackPaymentModal";
-import { formatKES } from "@/lib/paystackService";
+import { formatKES } from "@/lib/paystackService"; // used by payment modal internally
 import heroBeach from "@/assets/hero-beach.jpg";
 import mountainAdventure from "@/assets/mountain-adventure.jpg";
 import savingsTravel from "@/assets/savings-travel.jpg";
@@ -100,6 +100,7 @@ const TravelGoals = () => {
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [activeTab, setActiveTab] = useState("trips");
+  const [isPaymentReady, setIsPaymentReady] = useState(false);
 
   // For destination-based goals from navigation state
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
@@ -701,12 +702,13 @@ const TravelGoals = () => {
         />
 
         {/* Add Funds Dialog - Step 1: Enter Amount */}
-        <Dialog open={isAddFundsDialogOpen && !depositAmount} onOpenChange={(open) => {
+        <Dialog open={isAddFundsDialogOpen && !isPaymentReady} onOpenChange={(open) => {
           if (!open) {
             setIsAddFundsDialogOpen(false);
             setDepositAmount("");
             setSelectedTripId(null);
             setSelectedTrip(null);
+            setIsPaymentReady(false);
           }
         }}>
           <DialogContent className="dark:bg-card dark:border-border sm:max-w-md">
@@ -729,11 +731,11 @@ const TravelGoals = () => {
                 <div className="bg-muted/50 p-3 rounded-lg text-sm">
                   <div className="flex justify-between mb-1">
                     <span className="text-muted-foreground">Current savings</span>
-                    <span className="font-medium">{formatKES(selectedTrip.saved_amount)}</span>
+                    <span className="font-medium">{formatPrice(selectedTrip.saved_amount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Target</span>
-                    <span className="font-medium">{formatKES(selectedTrip.target_amount)}</span>
+                    <span className="font-medium">{formatPrice(selectedTrip.target_amount)}</span>
                   </div>
                   <Progress
                     value={Math.min((selectedTrip.saved_amount / selectedTrip.target_amount) * 100, 100)}
@@ -789,8 +791,8 @@ const TravelGoals = () => {
                 variant="hero"
                 disabled={!depositAmount || parseFloat(depositAmount) <= 0}
                 onClick={() => {
-                  // Amount is set, this will trigger the PaymentModal
-                  // The dialog will close itself
+                  // Transition from the amount entry dialog to the payment modal
+                  setIsPaymentReady(true);
                 }}
               >
                 Continue to Payment
@@ -801,13 +803,14 @@ const TravelGoals = () => {
 
         {/* Paystack Payment Modal - Step 2: Process Payment */}
         <PaystackPaymentModal
-          open={isAddFundsDialogOpen && !!depositAmount && parseFloat(depositAmount) > 0}
+          open={isAddFundsDialogOpen && isPaymentReady && !!depositAmount && parseFloat(depositAmount) > 0}
           onOpenChange={(open) => {
             if (!open) {
               setIsAddFundsDialogOpen(false);
               setDepositAmount("");
               setSelectedTripId(null);
               setSelectedTrip(null);
+              setIsPaymentReady(false);
             }
           }}
           amount={parseFloat(depositAmount) || 0}

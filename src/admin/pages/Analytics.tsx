@@ -201,7 +201,7 @@ export default function Analytics() {
         },
         {
             title: t('analytics.savingsGrowth'),
-            value: formatPrice(data.totalSavings / 129.5), // Convert from KES to USD for display
+            value: formatPrice(data.totalSavings), // totalSavings is in KES
             icon: DollarSign,
             change: "+24%",
             color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
@@ -215,7 +215,7 @@ export default function Analytics() {
         },
         {
             title: t('analytics.avgSavingsPerUser'),
-            value: formatPrice(data.avgSavingsPerUser / 129.5),
+            value: formatPrice(data.avgSavingsPerUser), // avgSavingsPerUser is in KES
             icon: TrendingUp,
             change: "+18%",
             color: "bg-orange-500/10 text-orange-600 dark:text-orange-400"
@@ -338,7 +338,7 @@ export default function Analytics() {
                                             border: '1px solid hsl(var(--border))',
                                             borderRadius: '8px'
                                         }}
-                                        formatter={(value: number) => [formatPrice(value / 129.5), 'Amount']}
+                                        formatter={(value: number) => [formatPrice(value), 'Amount']}
                                     />
                                     <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
                                 </BarChart>
@@ -414,7 +414,7 @@ export default function Analytics() {
                                             <div className="flex items-center justify-between mb-1">
                                                 <p className="font-medium truncate">{dest.name}</p>
                                                 <span className="text-sm font-bold text-primary">
-                                                    {formatPrice(dest.savings / 129.5)}
+                                                    {formatPrice(dest.savings)}
                                                 </span>
                                             </div>
                                             <div className="h-2 bg-muted rounded-full overflow-hidden">

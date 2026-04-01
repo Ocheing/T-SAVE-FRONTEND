@@ -363,7 +363,7 @@ const Auth = () => {
                   </div>
                   <h3 className="text-lg font-bold">{t('auth.verificationSent')}</h3>
                   <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                    {t('auth.verificationDesc', { email })}
+                    {t('auth.verificationDesc', { email: signupEmail })}
                   </p>
                   <Button
                     variant="outline"

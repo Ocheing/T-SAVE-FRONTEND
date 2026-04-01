@@ -116,6 +116,21 @@ const TravelGoals = () => {
     }
   }, [location.state]);
 
+  // Handle opening the Add Funds dialog if navigated from Dashboard
+  useEffect(() => {
+    const incomingTripId = location.state?.openAddFundsForTripId as string | undefined;
+    if (incomingTripId && trips && trips.length > 0) {
+      const tripToFund = trips.find(t => t.id === incomingTripId);
+      if (tripToFund) {
+        setSelectedTripId(tripToFund.id);
+        setSelectedTrip(tripToFund);
+        setIsAddFundsDialogOpen(true);
+        // Clear the state so it doesn't reopen indefinitely on reload
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, trips]);
+
   const getImageForCategory = (category: string | null) => {
     switch (category) {
       case "beach": return heroBeach;

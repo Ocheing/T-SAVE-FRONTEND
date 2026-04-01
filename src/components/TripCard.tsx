@@ -12,9 +12,10 @@ interface TripCardProps {
   image: string;
   id?: string;
   status?: string;
+  onAddFunds?: () => void;
 }
 
-const TripCard = ({ destination, targetAmount, savedAmount, targetDate, image }: TripCardProps) => {
+const TripCard = ({ destination, targetAmount, savedAmount, targetDate, image, onAddFunds }: TripCardProps) => {
   const progress = (savedAmount / targetAmount) * 100;
   const { formatPrice } = useCurrency();
 
@@ -60,7 +61,7 @@ const TripCard = ({ destination, targetAmount, savedAmount, targetDate, image }:
           <span>Target: {targetDate}</span>
         </div>
 
-        <Button className="w-full" variant="hero" size="sm">
+        <Button className="w-full" variant="hero" size="sm" onClick={onAddFunds}>
           <TrendingUp className="h-4 w-4 mr-2" />
           Add Funds
         </Button>

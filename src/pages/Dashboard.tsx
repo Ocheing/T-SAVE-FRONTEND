@@ -4,7 +4,7 @@ import TripCard from "@/components/TripCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import heroBeach from "@/assets/hero-beach.jpg";
 import mountainAdventure from "@/assets/mountain-adventure.jpg";
 import savingsTravel from "@/assets/savings-travel.jpg";
@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const { formatPrice, formatPriceFromKES } = useCurrency();
   const { data: allTrips } = useTrips();
   const { data: tripStats } = useTripStats();
@@ -185,6 +186,7 @@ const Dashboard = () => {
                         targetDate={format(new Date(trip.target_date), 'MMM yyyy')}
                         image={trip.image_url || (trip.category === 'beach' ? heroBeach : trip.category === 'mountain' ? mountainAdventure : savingsTravel)}
                         status={trip.status}
+                        onAddFunds={() => navigate('/travel-goals', { state: { openAddFundsForTripId: trip.id } })}
                       />
                     </div>
                   ))

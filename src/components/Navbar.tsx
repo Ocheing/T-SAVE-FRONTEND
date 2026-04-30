@@ -1,4 +1,4 @@
-import { Moon, Sun, Menu, Home, LayoutDashboard, Plane, Heart, User, MessageCircle, LogOut, Globe, ChevronDown, Search, Calendar, Bot, Receipt, Languages, Banknote, ShieldCheck } from "lucide-react";
+import { Moon, Sun, Menu, Home, LayoutDashboard, Plane, Heart, User, MessageCircle, LogOut, Globe, ChevronDown, Search, Calendar, Bot, Receipt, Languages, Banknote, ShieldCheck, MapPin } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -229,6 +229,25 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
             </Link>
           </div>
 
+          {/* Desktop Navigation Links */}
+          <div className="hidden md:flex items-center gap-1">
+            <Link to="/how-it-works">
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                How It Works
+              </Button>
+            </Link>
+            <Link to="/destinations">
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                Destinations
+              </Button>
+            </Link>
+            <Link to="/about">
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                About
+              </Button>
+            </Link>
+          </div>
+
           <div className="flex items-center gap-2">
             {/* Language & Currency Dropdown */}
             <DropdownMenu>
@@ -413,6 +432,26 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
                   ))}
                 </select>
               </div>
+
+              {/* Public Nav Links */}
+              <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                  How It Works
+                </Button>
+              </Link>
+              <Link to="/destinations" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                  <MapPin className="h-3 w-3 mr-2" />
+                  Destinations
+                </Button>
+              </Link>
+              <Link to="/about" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                  About
+                </Button>
+              </Link>
+
+              <div className="border-t border-white/5 my-1" />
 
               <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs">

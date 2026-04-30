@@ -32,6 +32,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const HelpCentre = lazy(() => import("./pages/HelpCentre"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const Destinations = lazy(() => import("./pages/Destinations"));
 
 
 // Admin Imports - Lazy loaded
@@ -86,6 +88,8 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
           <Route path="/about" element={<AboutUs />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/help" element={<HelpCentre />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/destinations" element={<Destinations />} />
 
           {/* Auth Routes - Unified login for all users */}
           <Route path="/auth" element={<Auth />} />

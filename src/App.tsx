@@ -32,7 +32,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const HelpCentre = lazy(() => import("./pages/HelpCentre"));
-const ReviewDialog = lazy(() => import("./components/ReviewDialog"));
+
 
 // Admin Imports - Lazy loaded
 const AdminLayout = lazy(() => import("./admin/components/AdminLayout"));
@@ -105,7 +105,7 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
           <Route path="/booking/:id" element={<ProtectedRoute><TripBooking /></ProtectedRoute>} />
           <Route path="/travel-goals" element={<ProtectedRoute><TravelGoals /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
-          <Route path="/payment/callback" element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />
+          <Route path="/payment/callback" element={<PaymentCallback />} />
 
           {/* Admin Routes - Protected by AdminLayout which checks admin role */}
           <Route path="/admin/setup" element={<AdminRoute><AdminSetup /></AdminRoute>} />
@@ -122,9 +122,7 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      <Suspense fallback={null}>
-        <ReviewDialog />
-      </Suspense>
+
       {!hideFooter && <Footer />}
     </div>
   );

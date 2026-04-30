@@ -1,17 +1,20 @@
 /**
  * PaystackPaymentModal
- * 
- * A beautifully designed payment modal that uses Paystack for secure payments.
- * 
+ *
+ * Uses Paystack's Inline Popup (react-paystack) for payment initialization.
+ * This approach requires ONLY the public key — no Edge Function needed to start a payment.
+ *
  * Flow:
- * 1. User sees payment summary with amount and goal info
+ * 1. User sees payment summary
  * 2. User clicks "Pay with Paystack"
- * 3. Payment is initialized via Edge Function (server-side)
- * 4. User is redirected to Paystack's hosted checkout
- * 5. After payment, user returns to /payment/callback for verification
+ * 3. Paystack popup opens directly (using public key + react-paystack)
+ * 4. User completes payment inside the popup
+ * 5. On success, we record the transaction in Supabase and update the savings goal
+ * 6. On close/cancel, we close the modal gracefully
  */
 
 import { useState, useCallback } from 'react';
+import { usePaystackPayment } from 'react-paystack';
 import {
     Dialog,
     DialogContent,
@@ -21,7 +24,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
     Loader2,
     CreditCard,
@@ -35,24 +37,24 @@ import {
     ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePaystackInitialize } from '@/hooks/usePaystack';
+import { supabase } from '@/lib/supabase';
 import { formatKES } from '@/lib/paystackService';
-import type { PaystackPaymentType } from '@/types/database.types';
+import { useQueryClient } from '@tanstack/react-query';
+
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '';
 
 interface PaystackPaymentModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    amount: number;
+    amount: number;           // Amount in KES
     description: string;
     goalName?: string;
     tripId?: string;
-    bookingId?: string;
-    paymentType?: PaystackPaymentType;
-    onInitiated?: (reference: string) => void;
+    onSuccess?: () => void;   // Called when payment is confirmed and DB is updated
     onCancel?: () => void;
 }
 
-type ModalStep = 'confirm' | 'initializing' | 'error';
+type ModalStep = 'confirm' | 'processing' | 'success' | 'error';
 
 export default function PaystackPaymentModal({
     open,
@@ -61,65 +63,162 @@ export default function PaystackPaymentModal({
     description,
     goalName,
     tripId,
-    bookingId,
-    paymentType = 'savings_deposit',
-    onInitiated,
+    onSuccess,
     onCancel,
 }: PaystackPaymentModalProps) {
-    const { user, profile } = useAuth();
-    const initPayment = usePaystackInitialize();
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
     const [step, setStep] = useState<ModalStep>('confirm');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    const resetModal = useCallback(() => {
-        setStep('confirm');
-        setErrorMsg(null);
-        initPayment.reset();
-    }, [initPayment]);
+    // Generate a unique reference for this payment attempt
+    const reference = `TSAVE_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
-    const handleClose = () => {
-        if (step === 'initializing') return; // Don't close while initializing
-        resetModal();
-        onOpenChange(false);
-        onCancel?.();
+    const paystackConfig = {
+        reference,
+        email: user?.email || '',
+        amount: Math.round(amount * 100), // Paystack requires smallest unit (kobo/cents)
+        currency: 'KES',
+        publicKey: PAYSTACK_PUBLIC_KEY,
+        label: goalName ? `Savings for ${goalName}` : 'TembeaSave Deposit',
+        metadata: {
+            trip_id: tripId || '',
+            description,
+            custom_fields: [
+                {
+                    display_name: 'Goal',
+                    variable_name: 'goal',
+                    value: goalName || 'General Savings',
+                },
+            ],
+        },
     };
 
-    const handlePayWithPaystack = async () => {
-        if (!user) return;
-
-        setStep('initializing');
-        setErrorMsg(null);
+    const onPaystackSuccess = useCallback(async (response: { reference: string }) => {
+        setStep('processing');
 
         try {
-            const result = await initPayment.mutateAsync({
-                amount,
-                email: user.email || profile?.email || '',
-                tripId: tripId || undefined,
-                bookingId: bookingId || undefined,
-                paymentType,
-                description,
-                metadata: {
-                    goal_name: goalName,
-                },
-            });
+            // Record the payment directly in Supabase using service role via anon key RLS
+            // 1. Insert transaction record
+            const { error: txError } = await supabase
+                .from('transactions')
+                .insert({
+                    user_id: user?.id,
+                    trip_id: tripId || null,
+                    type: 'deposit',
+                    amount: amount,
+                    description: description || (goalName ? `Savings for ${goalName}` : 'Paystack deposit'),
+                    status: 'completed',
+                });
 
-            // Store reference for tracking
-            onInitiated?.(result.reference);
+            if (txError) throw new Error('Failed to record transaction: ' + txError.message);
 
-            // Redirect to Paystack checkout
-            window.location.href = result.authorization_url;
+            // 2. Update trip saved_amount if a trip is linked
+            if (tripId) {
+                // Fetch current saved_amount first
+                const { data: tripData, error: fetchErr } = await supabase
+                    .from('trips')
+                    .select('saved_amount')
+                    .eq('id', tripId)
+                    .single();
 
-        } catch (error) {
-            console.error('[PaystackModal] Init error:', error);
-            setErrorMsg(error instanceof Error ? error.message : 'Failed to initialize payment');
+                if (fetchErr) throw new Error('Failed to fetch trip: ' + fetchErr.message);
+
+                const newSaved = (Number(tripData?.saved_amount) || 0) + amount;
+
+                const { error: updateErr } = await supabase
+                    .from('trips')
+                    .update({ saved_amount: newSaved })
+                    .eq('id', tripId);
+
+                if (updateErr) throw new Error('Failed to update savings: ' + updateErr.message);
+            }
+
+            // 3. Optionally store in paystack_payments for audit trail (best-effort)
+            try {
+                await supabase.from('paystack_payments').insert({
+                    user_id: user?.id,
+                    paystack_reference: response.reference,
+                    amount: Math.round(amount * 100), // in kobo
+                    currency: 'KES',
+                    email: user?.email || '',
+                    status: 'success',
+                    trip_id: tripId || null,
+                    payment_type: 'savings_deposit',
+                    description,
+                    paid_at: new Date().toISOString(),
+                });
+            } catch {
+                // Non-critical — don't fail the whole flow if audit insert fails
+            }
+
+            // 4. Refresh all relevant queries
+            queryClient.invalidateQueries({ queryKey: ['trips'] });
+            queryClient.invalidateQueries({ queryKey: ['tripStats'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['recentTransactions'] });
+            queryClient.invalidateQueries({ queryKey: ['transactionStats'] });
+
+            setStep('success');
+            onSuccess?.();
+
+        } catch (err) {
+            console.error('[PaystackModal] Post-payment update error:', err);
+            setErrorMsg(
+                err instanceof Error
+                    ? err.message
+                    : 'Payment succeeded but we failed to update your goal. Please contact support.'
+            );
             setStep('error');
         }
+    }, [user, tripId, amount, description, goalName, queryClient, onSuccess]);
+
+    const onPaystackClose = useCallback(() => {
+        // Called when user closes the Paystack popup WITHOUT paying
+        if (step === 'confirm') {
+            onCancel?.();
+        }
+    }, [step, onCancel]);
+
+    const initializePayment = usePaystackPayment(paystackConfig);
+
+    const handlePayWithPaystack = () => {
+        if (!user?.email) {
+            setErrorMsg('You must be logged in to make a payment.');
+            setStep('error');
+            return;
+        }
+        if (!PAYSTACK_PUBLIC_KEY || PAYSTACK_PUBLIC_KEY.includes('your_paystack')) {
+            setErrorMsg('Paystack is not configured. Please contact support.');
+            setStep('error');
+            return;
+        }
+
+        initializePayment({
+            onSuccess: onPaystackSuccess,
+            onClose: onPaystackClose,
+        });
+    };
+
+    const handleClose = () => {
+        if (step === 'processing') return; // Don't allow closing while updating DB
+        setStep('confirm');
+        setErrorMsg(null);
+        onOpenChange(false);
+        if (step !== 'success') onCancel?.();
+    };
+
+    const handleDone = () => {
+        setStep('confirm');
+        setErrorMsg(null);
+        onOpenChange(false);
     };
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="sm:max-w-md" id="paystack-payment-modal">
-                {/* Confirm Step */}
+
+                {/* ── Confirm Step ── */}
                 {step === 'confirm' && (
                     <>
                         <DialogHeader>
@@ -130,12 +229,12 @@ export default function PaystackPaymentModal({
                                 Secure Payment
                             </DialogTitle>
                             <DialogDescription>
-                                Complete your payment securely via Paystack
+                                Complete your savings deposit via Paystack
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-4 py-2">
-                            {/* Amount Display */}
+                            {/* Amount */}
                             <div className="text-center py-3">
                                 <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                                     {formatKES(amount)}
@@ -147,7 +246,7 @@ export default function PaystackPaymentModal({
                                 )}
                             </div>
 
-                            {/* Payment methods supported */}
+                            {/* Payment methods */}
                             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                     Accepted Payment Methods
@@ -155,20 +254,20 @@ export default function PaystackPaymentModal({
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-background/50">
                                         <CreditCard className="h-5 w-5 text-blue-500" />
-                                        <span className="text-[10px] text-muted-foreground">Card</span>
+                                        <span className="text-[10px] text-muted-foreground text-center">Card</span>
                                     </div>
                                     <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-background/50">
                                         <Building className="h-5 w-5 text-purple-500" />
-                                        <span className="text-[10px] text-muted-foreground">Bank</span>
+                                        <span className="text-[10px] text-muted-foreground text-center">Bank Transfer</span>
                                     </div>
                                     <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-background/50">
                                         <Smartphone className="h-5 w-5 text-green-500" />
-                                        <span className="text-[10px] text-muted-foreground">Mobile</span>
+                                        <span className="text-[10px] text-muted-foreground text-center">M-Pesa</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Payment summary */}
+                            {/* Summary */}
                             <div className="bg-muted/30 rounded-lg p-3 space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Payment for</span>
@@ -176,7 +275,7 @@ export default function PaystackPaymentModal({
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Email</span>
-                                    <span className="font-mono text-xs">{user?.email}</span>
+                                    <span className="font-mono text-xs truncate max-w-[200px]">{user?.email}</span>
                                 </div>
                                 <div className="flex justify-between text-sm pt-2 border-t border-border">
                                     <span className="font-semibold">Total</span>
@@ -207,8 +306,8 @@ export default function PaystackPaymentModal({
                     </>
                 )}
 
-                {/* Initializing Step */}
-                {step === 'initializing' && (
+                {/* ── Processing Step (updating DB after payment) ── */}
+                {step === 'processing' && (
                     <div className="py-12 text-center space-y-6">
                         <div className="relative mx-auto w-20 h-20">
                             <div className="absolute inset-0 bg-[#0BA4DB]/20 rounded-full animate-ping" />
@@ -217,19 +316,46 @@ export default function PaystackPaymentModal({
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <h3 className="text-lg font-semibold">Preparing Secure Checkout</h3>
+                            <h3 className="text-lg font-semibold">Updating Your Savings</h3>
                             <p className="text-sm text-muted-foreground">
-                                Setting up your payment session with Paystack...
+                                Payment confirmed! Updating your goal balance...
                             </p>
                         </div>
                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-[#0BA4DB]" />
-                        <p className="text-xs text-muted-foreground">
-                            You'll be redirected to Paystack's secure checkout page
-                        </p>
                     </div>
                 )}
 
-                {/* Error Step */}
+                {/* ── Success Step ── */}
+                {step === 'success' && (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2 text-green-600">
+                                <CheckCircle2 className="h-5 w-5" />
+                                Payment Successful!
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="py-6 text-center space-y-4">
+                            <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                                <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-lg font-semibold text-green-600 dark:text-green-400">
+                                    {formatKES(amount)} added! 🎉
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Your savings goal has been updated successfully.
+                                </p>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button className="w-full" onClick={handleDone}>
+                                Done
+                            </Button>
+                        </DialogFooter>
+                    </>
+                )}
+
+                {/* ── Error Step ── */}
                 {step === 'error' && (
                     <>
                         <DialogHeader>
@@ -244,10 +370,10 @@ export default function PaystackPaymentModal({
                             </div>
                             <div className="space-y-1">
                                 <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">
-                                    Could Not Start Payment
+                                    Something went wrong
                                 </h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {errorMsg || 'Something went wrong. Please try again.'}
+                                    {errorMsg || 'An unexpected error occurred. Please try again.'}
                                 </p>
                             </div>
                         </div>
@@ -255,10 +381,7 @@ export default function PaystackPaymentModal({
                             <Button variant="outline" onClick={handleClose}>
                                 Cancel
                             </Button>
-                            <Button onClick={() => {
-                                resetModal();
-                                handlePayWithPaystack();
-                            }}>
+                            <Button onClick={() => { setStep('confirm'); setErrorMsg(null); }}>
                                 Try Again
                             </Button>
                         </DialogFooter>

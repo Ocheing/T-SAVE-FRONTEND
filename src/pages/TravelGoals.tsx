@@ -173,11 +173,12 @@ const TravelGoals = () => {
     }
   };
 
-  const handlePaymentInitiated = (reference: string) => {
-    // Payment has been initiated and user will be redirected to Paystack.
-    // After payment, they return to /payment/callback which handles verification.
-    // The DB function automatically updates savings when payment succeeds.
-    console.log('[TravelGoals] Payment initiated, reference:', reference);
+  const handlePaymentSuccess = () => {
+    toast({
+      title: "✅ Payment successful!",
+      description: "Your savings has been updated.",
+    });
+    refetch();
   };
 
   const handleWithdraw = async () => {
@@ -764,15 +765,21 @@ const TravelGoals = () => {
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="1000"
-                  min="1"
+                  placeholder="500"
+                  min="100"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
                   className="dark:bg-background dark:border-input text-lg"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Enter the amount in Kenyan Shillings (KES)
-                </p>
+                {depositAmount && parseFloat(depositAmount) > 0 && parseFloat(depositAmount) < 100 ? (
+                  <p className="text-xs text-destructive font-medium">
+                    ⚠️ Minimum deposit is KES 100
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Payments are processed in KES via Paystack (minimum KES 100)
+                  </p>
+                )}
               </div>
 
               {/* Quick amount buttons */}
@@ -804,9 +811,8 @@ const TravelGoals = () => {
               </Button>
               <Button
                 variant="hero"
-                disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                disabled={!depositAmount || parseFloat(depositAmount) < 100}
                 onClick={() => {
-                  // Transition from the amount entry dialog to the payment modal
                   setIsPaymentReady(true);
                 }}
               >
@@ -832,8 +838,7 @@ const TravelGoals = () => {
           description={selectedTrip ? `Savings for ${selectedTrip.destination}` : 'Add funds to savings'}
           goalName={selectedTrip?.destination}
           tripId={selectedTripId || undefined}
-          paymentType="savings_deposit"
-          onInitiated={handlePaymentInitiated}
+          onSuccess={handlePaymentSuccess}
           onCancel={() => {
             setDepositAmount("");
           }}

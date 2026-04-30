@@ -59,10 +59,10 @@ Deno.serve(async (req) => {
     // Parse request body
     const body: InitializeRequest = await req.json()
 
-    // Validate required fields
-    if (!body.amount || body.amount <= 0) {
+    // Validate required fields — Paystack Kenya minimum is KES 100
+    if (!body.amount || body.amount < 100) {
       return new Response(
-        JSON.stringify({ error: 'Invalid amount' }),
+        JSON.stringify({ error: 'Minimum deposit amount is KES 100' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

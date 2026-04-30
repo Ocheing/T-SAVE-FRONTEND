@@ -109,11 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchingRef.current = true;
 
         try {
-            // Fetch profile and role in parallel for speed
-            const [profileData, role] = await Promise.all([
-                fetchProfile(userId),
-                fetchAdminRole(userId)
-            ]);
+            // Fetch profile and role sequentially to prevent Web Lock timeouts
+            const profileData = await fetchProfile(userId);
+            const role = await fetchAdminRole(userId);
 
             setProfile(profileData);
             setAdminRole(role);
@@ -258,12 +256,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(data.session);
             setUser(data.user);
 
-            // Fetch both profile AND role in parallel for instant data population
-            // Use force=true to bypass the concurrent-fetch guard
-            const [profileData, role] = await Promise.all([
-                fetchProfile(data.user.id),
-                fetchAdminRole(data.user.id),
-            ]);
+            // Fetch profile and role sequentially to prevent Web Lock timeouts
+            const profileData = await fetchProfile(data.user.id);
+            const role = await fetchAdminRole(data.user.id);
 
             // Update all state at once so the dashboard has everything on first render
             setProfile(profileData);
@@ -294,19 +289,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const signOut = async () => {
-        // Clear local state FIRST so UI updates immediately regardless of network
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-        setAdminRole(null);
-        fetchingRef.current = false;
-
         try {
-            // Then tell Supabase to invalidate the server session
+            // Tell Supabase to invalidate the server session BEFORE clearing local state.
+            // If we clear local state first, the app re-renders instantly, dropping protected routes,
+            // which fires all sort of unmounts (e.g. Realtime channel.unsubscribe), stealing the lock!
             await supabase.auth.signOut();
         } catch (error) {
-            // Non-fatal: local state is already cleared, user is effectively logged out
+            // Non-fatal: local state will still be cleared in finally block
             console.error('[AuthContext] Error calling supabase.auth.signOut():', error);
+        } finally {
+            // Clear local state so UI updates
+            setUser(null);
+            setSession(null);
+            setProfile(null);
+            setAdminRole(null);
+            fetchingRef.current = false;
         }
     };
 

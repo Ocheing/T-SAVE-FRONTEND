@@ -3,11 +3,11 @@ import { ChevronLeft, ChevronRight, Wallet, TrendingUp, Target } from "lucide-re
 import { Button } from "./ui/button";
 import heroBeach from "@/assets/hero-beach.jpg";
 import savingsTravel from "@/assets/savings-travel.jpg";
-import mountainAdventure from "@/assets/mountain-adventure.jpg";
+import paradiseBeach from "@/assets/hero-paradise-beach.png";
 import { useTranslation } from "react-i18next";
 
 // Preload images for smoother transitions
-const preloadImages = [heroBeach, savingsTravel, mountainAdventure];
+const preloadImages = [heroBeach, savingsTravel, paradiseBeach];
 if (typeof window !== 'undefined') {
   preloadImages.forEach((src) => {
     const img = new Image();
@@ -35,7 +35,7 @@ const HeroCarousel = () => {
       description: t('home.setGoalsDesc')
     },
     {
-      image: mountainAdventure,
+      image: paradiseBeach,
       icon: TrendingUp,
       title: t('home.watchDreams'),
       description: t('home.watchDreamsDesc')

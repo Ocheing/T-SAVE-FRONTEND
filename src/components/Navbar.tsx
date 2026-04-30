@@ -215,20 +215,18 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
 
   return (
     <>
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
-      <div className="container mx-auto px-4">
+    <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[hsl(222,47%,7%)] backdrop-blur-xl">
+      <div className="container mx-auto px-4 sm:px-6">
         <div className="flex h-14 items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center">
+          <div className="flex items-center gap-2.5">
+            <Link to="/" className="flex items-center gap-2">
               <img
                 src={logo}
                 alt="TembeaSave Logo"
-                className="h-8 w-auto rounded-lg"
+                className="h-8 w-8 rounded-full object-cover shadow-md shadow-primary/20"
               />
-              <span className="font-bold text-lg tracking-tight">TEMBEASAVE</span>
+              <span className="font-extrabold text-base tracking-wide text-white">TEMBEASAVE</span>
             </Link>
-
-
           </div>
 
           <div className="flex items-center gap-2">
@@ -300,7 +298,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
             {user ? (
               <>
                 <Link to="/dashboard" className="hidden md:block">
-                  <Button variant="hero" size="sm">Dashboard</Button>
+                  <Button variant="hero" size="sm" className="rounded-full px-5 bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40">Dashboard</Button>
                 </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild className="hidden md:flex">
@@ -381,7 +379,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
               </>
             ) : (
               <Link to="/auth" className="hidden md:block">
-                <Button variant="hero" size="sm">Get Started</Button>
+                <Button variant="hero" size="sm" className="rounded-full px-5 bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40">Get Started</Button>
               </Link>
             )}
           </div>

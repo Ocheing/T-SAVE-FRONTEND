@@ -1,35 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
-import {
-  Target,
-  Plus,
-  TrendingUp,
-  Loader2,
-  Trash2,
-  DollarSign,
-  Lock,
-  Unlock,
-  Music,
-  ArrowDownCircle,
-  Star,
-  Receipt,
-  Palmtree,
-  Mountain,
-  Building2,
-  Compass,
-  Theater,
-  Mic,
-  Tent,
-  Trophy,
-  ClipboardList,
-  Pin,
-  Plane,
-  MapPin,
-  CalendarDays,
-  PenLine,
-  Sparkles,
-  Clock,
-} from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBullseye, faPlus, faArrowTrendUp, faSpinner, faTrashCan, faDollarSign, faLock, faUnlock, faMusic, faCircleArrowDown, faStar, faReceipt, faTree, faMountain, faBuilding, faCompass, faMasksTheater, faMicrophone, faTent, faTrophy, faClipboardList, faThumbtack, faPlane, faLocationDot, faCalendarDays, faPen, faWandMagicSparkles, faClock } from "@fortawesome/free-solid-svg-icons";
 import TripCard from "@/components/TripCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -142,13 +114,13 @@ const TravelGoals = () => {
 
   const getCategoryIcon = (category: string | null) => {
     switch (category) {
-      case "beach": return Palmtree;
-      case "mountain": return Mountain;
-      case "city": return Building2;
-      case "adventure": return Compass;
-      case "cultural": return Theater;
-      case "event": return Music;
-      default: return Target;
+      case "beach": return faTree;
+      case "mountain": return faMountain;
+      case "city": return faBuilding;
+      case "adventure": return faCompass;
+      case "cultural": return faMasksTheater;
+      case "event": return faMusic;
+      default: return faBullseye;
     }
   };
 
@@ -257,7 +229,7 @@ const TravelGoals = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center dark:bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <FontAwesomeIcon icon={faSpinner}  className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -286,18 +258,18 @@ const TravelGoals = () => {
               <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
                 {trip.goal_type === "locked" ? (
                   <Badge className="bg-orange-500/90 text-white text-[10px] border-none">
-                    <Lock className="h-2.5 w-2.5 mr-0.5" />
+                    <FontAwesomeIcon icon={faLock}  className="h-2.5 w-2.5 mr-0.5" />
                     Locked
                   </Badge>
                 ) : (
                   <Badge className="bg-green-500/90 text-white text-[10px] border-none">
-                    <Unlock className="h-2.5 w-2.5 mr-0.5" />
+                    <FontAwesomeIcon icon={faUnlock}  className="h-2.5 w-2.5 mr-0.5" />
                     Flexible
                   </Badge>
                 )}
                 {trip.is_custom_goal && (
                   <Badge variant="secondary" className="text-[10px]">
-                    <PenLine className="h-2.5 w-2.5 mr-0.5" />
+                    <FontAwesomeIcon icon={faPen}  className="h-2.5 w-2.5 mr-0.5" />
                     Custom
                   </Badge>
                 )}
@@ -305,7 +277,7 @@ const TravelGoals = () => {
               {!trip.is_custom_goal && (
                 <div className="absolute bottom-2 left-2">
                   <Badge variant="secondary" className="text-[10px] bg-black/50 text-white border-none">
-                    <MapPin className="h-2.5 w-2.5 mr-0.5" />
+                    <FontAwesomeIcon icon={faLocationDot}  className="h-2.5 w-2.5 mr-0.5" />
                     {trip.location || "Destination"}
                   </Badge>
                 </div>
@@ -317,15 +289,15 @@ const TravelGoals = () => {
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
-                    <CategoryIcon className="h-4 w-4 text-primary" />
+                    <FontAwesomeIcon icon={CategoryIcon}  className="h-4 w-4 text-primary" />
                     <h3 className="font-bold text-base">{trip.destination}</h3>
                   </div>
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <CalendarDays className="h-3 w-3" />
+                    <FontAwesomeIcon icon={faCalendarDays}  className="h-3 w-3" />
                     <span>Target: {format(new Date(trip.target_date), "MMM dd, yyyy")}</span>
                     {daysLeft > 0 && (
                       <Badge variant="outline" className="text-[8px] h-4">
-                        <Clock className="h-2 w-2 mr-0.5" />
+                        <FontAwesomeIcon icon={faClock}  className="h-2 w-2 mr-0.5" />
                         {daysLeft}d left
                       </Badge>
                     )}
@@ -333,7 +305,7 @@ const TravelGoals = () => {
                 </div>
                 {trip.savings_frequency && (
                   <Badge variant="outline" className="text-[10px] capitalize">
-                    <TrendingUp className="h-2.5 w-2.5 mr-0.5" />
+                    <FontAwesomeIcon icon={faArrowTrendUp}  className="h-2.5 w-2.5 mr-0.5" />
                     {trip.savings_frequency}
                   </Badge>
                 )}
@@ -377,7 +349,7 @@ const TravelGoals = () => {
                   </span>
                   {progress >= 100 && (
                     <Badge className="bg-green-500 text-white text-[10px] border-none">
-                      <Sparkles className="h-2.5 w-2.5 mr-0.5" />
+                      <FontAwesomeIcon icon={faWandMagicSparkles}  className="h-2.5 w-2.5 mr-0.5" />
                       Goal Reached!
                     </Badge>
                   )}
@@ -395,7 +367,7 @@ const TravelGoals = () => {
                     setIsAddFundsDialogOpen(true);
                   }}
                 >
-                  <DollarSign className="h-4 w-4 mr-1" />
+                  <FontAwesomeIcon icon={faDollarSign}  className="h-4 w-4 mr-1" />
                   Add Funds
                 </Button>
                 <Button
@@ -407,7 +379,7 @@ const TravelGoals = () => {
                     trip.saved_amount < trip.target_amount
                   }
                 >
-                  <ArrowDownCircle className="h-4 w-4 mr-1" />
+                  <FontAwesomeIcon icon={faCircleArrowDown}  className="h-4 w-4 mr-1" />
                   Withdraw
                 </Button>
                 <Button
@@ -416,7 +388,7 @@ const TravelGoals = () => {
                   className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() => setTripToDelete(trip.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <FontAwesomeIcon icon={faTrashCan}  className="h-4 w-4" />
                 </Button>
               </div>
               {trip.goal_type === "locked" &&
@@ -440,7 +412,7 @@ const TravelGoals = () => {
         <div className="mb-6 animate-fade-in flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-              <Target className="h-7 w-7 text-primary" />
+              <FontAwesomeIcon icon={faBullseye}  className="h-7 w-7 text-primary" />
               {t('travelGoals.title')}
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -449,7 +421,7 @@ const TravelGoals = () => {
           </div>
           <Link to="/transactions">
             <Button variant="outline" size="sm">
-              <Receipt className="h-4 w-4 mr-2" />
+              <FontAwesomeIcon icon={faReceipt}  className="h-4 w-4 mr-2" />
               {t('dashboard.viewTransactions')}
             </Button>
           </Link>
@@ -469,7 +441,7 @@ const TravelGoals = () => {
           </Card>
           <Card className="p-4 dark:bg-card dark:border-border">
             <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
+              <FontAwesomeIcon icon={faArrowTrendUp}  className="h-3 w-3" />
               {t('travelGoals.progress')}
             </div>
             <div className="text-xl font-bold text-primary">
@@ -484,11 +456,11 @@ const TravelGoals = () => {
           <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
             <TabsList className="dark:bg-muted">
               <TabsTrigger value="trips" className="text-sm">
-                <Plane className="h-4 w-4 mr-2" />
+                <FontAwesomeIcon icon={faPlane}  className="h-4 w-4 mr-2" />
                 {t('travelGoals.title')} ({activeTrips.length})
               </TabsTrigger>
               <TabsTrigger value="events" className="text-sm">
-                <Music className="h-4 w-4 mr-2" />
+                <FontAwesomeIcon icon={faMusic}  className="h-4 w-4 mr-2" />
                 Live Events ({eventTrips.length})
               </TabsTrigger>
             </TabsList>
@@ -497,14 +469,14 @@ const TravelGoals = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="hero">
-                  <Plus className="h-4 w-4 mr-1" />
+                  <FontAwesomeIcon icon={faPlus}  className="h-4 w-4 mr-1" />
                   {t('travelGoals.createGoal')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
                   <Link to="/trips" className="flex items-center gap-2 cursor-pointer">
-                    <MapPin className="h-4 w-4 text-primary" />
+                    <FontAwesomeIcon icon={faLocationDot}  className="h-4 w-4 text-primary" />
                     <div>
                       <p className="font-medium">{t('trips.browseTrips')}</p>
                       <p className="text-[10px] text-muted-foreground">
@@ -518,7 +490,7 @@ const TravelGoals = () => {
                   onClick={() => setIsCustomDialogOpen(true)}
                   className="flex items-center gap-2 cursor-pointer"
                 >
-                  <PenLine className="h-4 w-4 text-primary" />
+                  <FontAwesomeIcon icon={faPen}  className="h-4 w-4 text-primary" />
                   <div>
                     <p className="font-medium">{t('travelGoals.customGoal')}</p>
                     <p className="text-[10px] text-muted-foreground">
@@ -533,7 +505,7 @@ const TravelGoals = () => {
           <TabsContent value="trips">
             {activeTrips.length === 0 ? (
               <Card className="p-12 text-center dark:bg-card dark:border-border">
-                <Target className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <FontAwesomeIcon icon={faBullseye}  className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-bold mb-2">{t('dashboard.noGoalsYet')}</h3>
                 <p className="text-sm text-muted-foreground mb-6">
                   {t('travelGoals.startExploring')}
@@ -541,7 +513,7 @@ const TravelGoals = () => {
                 <div className="flex gap-3 justify-center">
                   <Link to="/trips">
                     <Button variant="default">
-                      <MapPin className="h-4 w-4 mr-2" />
+                      <FontAwesomeIcon icon={faLocationDot}  className="h-4 w-4 mr-2" />
                       {t('wishlist.exploreDestinations')}
                     </Button>
                   </Link>
@@ -549,7 +521,7 @@ const TravelGoals = () => {
                     variant="outline"
                     onClick={() => setIsCustomDialogOpen(true)}
                   >
-                    <PenLine className="h-4 w-4 mr-2" />
+                    <FontAwesomeIcon icon={faPen}  className="h-4 w-4 mr-2" />
                     {t('travelGoals.customGoal')}
                   </Button>
                 </div>
@@ -564,7 +536,7 @@ const TravelGoals = () => {
           <TabsContent value="events">
             {eventTrips.length === 0 ? (
               <Card className="p-12 text-center dark:bg-card dark:border-border">
-                <Music className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <FontAwesomeIcon icon={faMusic}  className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-bold mb-2">{t('travelGoals.noEventsYet')}</h3>
                 <p className="text-sm text-muted-foreground mb-6">
                   {t('travelGoals.saveForEvents')}
@@ -575,7 +547,7 @@ const TravelGoals = () => {
                     setIsCustomDialogOpen(true);
                   }}
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <FontAwesomeIcon icon={faPlus}  className="h-4 w-4 mr-2" />
                   {t('travelGoals.createGoal')}
                 </Button>
               </Card>
@@ -593,37 +565,37 @@ const TravelGoals = () => {
                           <Badge className="mb-2 text-xs gap-1">
                             {trip.event_type === "concert" && (
                               <>
-                                <Mic className="h-3 w-3" />
+                                <FontAwesomeIcon icon={faMicrophone}  className="h-3 w-3" />
                                 Concert
                               </>
                             )}
                             {trip.event_type === "festival" && (
                               <>
-                                <Tent className="h-3 w-3" />
+                                <FontAwesomeIcon icon={faTent}  className="h-3 w-3" />
                                 Festival
                               </>
                             )}
                             {trip.event_type === "sports" && (
                               <>
-                                <Trophy className="h-3 w-3" />
+                                <FontAwesomeIcon icon={faTrophy}  className="h-3 w-3" />
                                 Sports
                               </>
                             )}
                             {trip.event_type === "conference" && (
                               <>
-                                <ClipboardList className="h-3 w-3" />
+                                <FontAwesomeIcon icon={faClipboardList}  className="h-3 w-3" />
                                 Conference
                               </>
                             )}
                             {trip.event_type === "other" && (
                               <>
-                                <Pin className="h-3 w-3" />
+                                <FontAwesomeIcon icon={faThumbtack}  className="h-3 w-3" />
                                 Event
                               </>
                             )}
                             {!trip.event_type && (
                               <>
-                                <Music className="h-3 w-3" />
+                                <FontAwesomeIcon icon={faMusic}  className="h-3 w-3" />
                                 Event
                               </>
                             )}
@@ -634,9 +606,9 @@ const TravelGoals = () => {
                           </p>
                         </div>
                         {trip.goal_type === "locked" ? (
-                          <Lock className="h-4 w-4 text-orange-500" />
+                          <FontAwesomeIcon icon={faLock}  className="h-4 w-4 text-orange-500" />
                         ) : (
-                          <Unlock className="h-4 w-4 text-green-500" />
+                          <FontAwesomeIcon icon={faUnlock}  className="h-4 w-4 text-green-500" />
                         )}
                       </div>
 
@@ -668,7 +640,7 @@ const TravelGoals = () => {
                             setIsAddFundsDialogOpen(true);
                           }}
                         >
-                          <DollarSign className="h-4 w-4 mr-1" />
+                          <FontAwesomeIcon icon={faDollarSign}  className="h-4 w-4 mr-1" />
                           Add
                         </Button>
                         <Button
@@ -680,7 +652,7 @@ const TravelGoals = () => {
                             trip.saved_amount < trip.target_amount
                           }
                         >
-                          <ArrowDownCircle className="h-4 w-4" />
+                          <FontAwesomeIcon icon={faCircleArrowDown}  className="h-4 w-4" />
                         </Button>
                         <Button
                           size="icon"
@@ -688,7 +660,7 @@ const TravelGoals = () => {
                           className="h-8 w-8 text-destructive"
                           onClick={() => setTripToDelete(trip.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <FontAwesomeIcon icon={faTrashCan}  className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -730,7 +702,7 @@ const TravelGoals = () => {
           <DialogContent className="dark:bg-card dark:border-border sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" />
+                <FontAwesomeIcon icon={faDollarSign}  className="h-5 w-5 text-primary" />
                 {t('travelGoals.addFunds')}
               </DialogTitle>
               <DialogDescription>
@@ -897,7 +869,7 @@ const TravelGoals = () => {
               >
                 {createTransaction.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <FontAwesomeIcon icon={faSpinner}  className="h-4 w-4 mr-2 animate-spin" />
                     {t('common.loading')}
                   </>
                 ) : (
@@ -928,7 +900,7 @@ const TravelGoals = () => {
               >
                 {deleteTrip.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <FontAwesomeIcon icon={faSpinner}  className="h-4 w-4 mr-2 animate-spin" />
                     {t('common.loading')}
                   </>
                 ) : (

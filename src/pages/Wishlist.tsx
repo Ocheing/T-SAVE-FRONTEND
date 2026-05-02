@@ -1,4 +1,5 @@
-import { Heart, Eye, Plus, Trash2, MapPin, DollarSign, Loader2 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart, faEye, faPlus, faTrashCan, faLocationDot, faDollarSign, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +47,7 @@ const Wishlist = () => {
   if (isLoading && !wishlistItems) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <FontAwesomeIcon icon={faSpinner} className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -63,7 +64,7 @@ const Wishlist = () => {
 
           {!wishlistItems || wishlistItems.length === 0 ? (
             <Card className="p-16 text-center animate-fade-in">
-              <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <FontAwesomeIcon icon={faHeart} className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-xl font-bold mb-2">{t('wishlist.emptyWishlist')}</h2>
               <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
                 {t('wishlist.exploreDestinations')}
@@ -71,7 +72,7 @@ const Wishlist = () => {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                 <Link to="/trips">
                   <Button variant="hero" size="sm" className="text-xs sm:text-sm w-full sm:w-auto">
-                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <FontAwesomeIcon icon={faPlus} className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                     {t('common.create')}
                   </Button>
                 </Link>
@@ -110,14 +111,14 @@ const Wishlist = () => {
                       onClick={() => handleRemove(item.id, item.destination)}
                       disabled={removeFromWishlist.isPending}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <FontAwesomeIcon icon={faTrashCan} className="h-4 w-4" />
                     </Button>
                   </div>
 
                   <div className="p-4 space-y-3">
                     <div>
                       <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-primary" />
+                        <FontAwesomeIcon icon={faLocationDot} className="h-4 w-4 text-primary" />
                         {item.destination}
                       </h3>
                       {item.description && (
@@ -128,7 +129,7 @@ const Wishlist = () => {
                     <div className="flex items-center gap-3 text-xs">
                       {item.estimated_cost && (
                         <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-primary" />
+                          <FontAwesomeIcon icon={faDollarSign} className="h-3 w-3 text-primary" />
                           <span className="font-semibold">{formatPriceFromKES(Number(item.estimated_cost))}</span>
                         </div>
                       )}
@@ -160,7 +161,7 @@ const Wishlist = () => {
           <div className="text-center">
             <Link to="/trips">
               <Button variant="outline" size="lg">
-                <Eye className="h-5 w-5 mr-2" />
+                <FontAwesomeIcon icon={faEye} className="h-5 w-5 mr-2" />
                 {t('wishlist.exploreDestinations')}
               </Button>
             </Link>

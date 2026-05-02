@@ -15,6 +15,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    flowType: 'pkce',
     // Namespace the session key so stale tokens from other environments don't bleed in
     storageKey: 'tsave_auth',
   },

@@ -1,4 +1,9 @@
-import { Moon, Sun, Menu, Home, LayoutDashboard, Plane, Heart, User, MessageCircle, LogOut, Globe, ChevronDown, Search, Calendar, Bot, Receipt, Languages, Banknote, ShieldCheck, MapPin } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faHouse, faGaugeHigh, faPlane, faHeart, faUser, faRobot,
+  faArrowRightFromBracket, faGlobe, faChevronDown, faCalendar,
+  faReceipt, faLanguage, faMoneyBill, faShieldHalved, faLocationDot, faBars,
+} from '@fortawesome/free-solid-svg-icons';
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -229,41 +234,43 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-1">
-            <Link to="/how-it-works">
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                How It Works
-              </Button>
-            </Link>
-            <Link to="/destinations">
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                Destinations
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                About
-              </Button>
-            </Link>
-          </div>
+          {/* Desktop Navigation Links — homepage only */}
+          {isHomePage && (
+            <div className="hidden md:flex items-center gap-1">
+              <Link to="/how-it-works">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                  How It Works
+                </Button>
+              </Link>
+              <Link to="/destinations">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                  Destinations
+                </Button>
+              </Link>
+              <Link to="/about">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                  About
+                </Button>
+              </Link>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             {/* Language & Currency Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild className="hidden md:flex">
                 <Button variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1">
-                  <Globe className="h-3 w-3" />
+                  <FontAwesomeIcon icon={faGlobe} className="h-3 w-3" />
                   <span>{selectedLanguage?.flag} {i18n.language.toUpperCase()}</span>
                   <span className="text-[10px] text-muted-foreground mx-1">|</span>
                   <span>{selectedCurrency?.flag} {currency}</span>
-                  <ChevronDown className="h-3 w-3 ml-1" />
+                  <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72 p-0">
                 <div className="p-2">
                   <DropdownMenuLabel className="text-xs font-semibold flex items-center gap-2">
-                    <Languages className="h-3 w-3 text-primary" /> Select Language
+                    <FontAwesomeIcon icon={faLanguage} className="h-3 w-3 text-primary" /> Select Language
                   </DropdownMenuLabel>
                   <ScrollArea className="h-[200px]">
                     <div className="grid grid-cols-2 gap-1 p-1">
@@ -283,7 +290,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
                   <DropdownMenuSeparator className="my-2" />
 
                   <DropdownMenuLabel className="text-xs font-semibold flex items-center gap-2">
-                    <Banknote className="h-3 w-3 text-primary" /> Select Currency
+                    <FontAwesomeIcon icon={faMoneyBill} className="h-3 w-3 text-primary" /> Select Currency
                   </DropdownMenuLabel>
                   <ScrollArea className="h-[200px]">
                     <div className="grid grid-cols-2 gap-1 p-1">
@@ -310,7 +317,7 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
             </Button> */}
 
             <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <Menu className="h-4 w-4" />
+              <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
             </Button>
 
             {/* CTA Button + User Menu */}
@@ -322,8 +329,8 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild className="hidden md:flex">
                     <Button variant="outline" size="sm" className="h-8 px-2 gap-1">
-                      <span className="text-xs font-semibold">{userInitials}</span>
-                      <ChevronDown className="h-3 w-3" />
+                      <FontAwesomeIcon icon={faUser} className="h-3 w-3 mr-1" />
+                      <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -335,62 +342,62 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
                     {isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin/dashboard" className="cursor-pointer text-xs font-semibold text-primary">
-                          <ShieldCheck className="h-3 w-3 mr-2" />
+                          <FontAwesomeIcon icon={faShieldHalved} className="h-3 w-3 mr-2" />
                           Admin Panel
                         </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
                       <Link to="/" className="cursor-pointer text-xs">
-                        <Home className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faHouse} className="h-3 w-3 mr-2" />
                         Home
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/dashboard" className="cursor-pointer text-xs">
-                        <LayoutDashboard className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faGaugeHigh} className="h-3 w-3 mr-2" />
                         {t('nav.dashboard')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/trips" className="cursor-pointer text-xs">
-                        <Plane className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faPlane} className="h-3 w-3 mr-2" />
                         {t('nav.trips')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/wishlist" className="cursor-pointer text-xs">
-                        <Heart className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faHeart} className="h-3 w-3 mr-2" />
                         {t('nav.wishlist')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/bookings" className="cursor-pointer text-xs">
-                        <Calendar className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 mr-2" />
                         {t('nav.bookings')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/transactions" className="cursor-pointer text-xs">
-                        <Receipt className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faReceipt} className="h-3 w-3 mr-2" />
                         Transactions
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/chat" className="cursor-pointer text-xs">
-                        <Bot className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faRobot} className="h-3 w-3 mr-2" />
                         {t('nav.chat')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="cursor-pointer text-xs">
-                        <User className="h-3 w-3 mr-2" />
+                        <FontAwesomeIcon icon={faUser} className="h-3 w-3 mr-2" />
                         {t('nav.profile')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer text-xs">
-                      <LogOut className="h-3 w-3 mr-2" />
+                      <FontAwesomeIcon icon={faArrowRightFromBracket} className="h-3 w-3 mr-2" />
                       {t('nav.logout')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -433,65 +440,69 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
                 </select>
               </div>
 
-              {/* Public Nav Links */}
-              <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  How It Works
-                </Button>
-              </Link>
-              <Link to="/destinations" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  <MapPin className="h-3 w-3 mr-2" />
-                  Destinations
-                </Button>
-              </Link>
-              <Link to="/about" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  About
-                </Button>
-              </Link>
+              {/* Public Nav Links — homepage only */}
+              {isHomePage && (
+                <>
+                  <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                      How It Works
+                    </Button>
+                  </Link>
+                  <Link to="/destinations" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                      <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3 mr-2" />
+                      Destinations
+                    </Button>
+                  </Link>
+                  <Link to="/about" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                      About
+                    </Button>
+                  </Link>
+                </>
+              )}
 
               <div className="border-t border-white/5 my-1" />
 
               <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  <LayoutDashboard className="h-3 w-3 mr-2" />
+                  <FontAwesomeIcon icon={faGaugeHigh} className="h-3 w-3 mr-2" />
                   {t('nav.dashboard')}
                 </Button>
               </Link>
               <Link to="/trips" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  <Plane className="h-3 w-3 mr-2" />
+                  <FontAwesomeIcon icon={faPlane} className="h-3 w-3 mr-2" />
                   {t('nav.trips')}
                 </Button>
               </Link>
               <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  <Heart className="h-3 w-3 mr-2" />
+                  <FontAwesomeIcon icon={faHeart} className="h-3 w-3 mr-2" />
                   {t('nav.wishlist')}
                 </Button>
               </Link>
               <Link to="/bookings" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  <Calendar className="h-3 w-3 mr-2" />
+                  <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 mr-2" />
                   {t('nav.bookings')}
                 </Button>
               </Link>
               <Link to="/chat" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  <Bot className="h-3 w-3 mr-2" />
+                  <FontAwesomeIcon icon={faRobot} className="h-3 w-3 mr-2" />
                   {t('nav.chat')}
                 </Button>
               </Link>
               <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                  <User className="h-3 w-3 mr-2" />
+                  <FontAwesomeIcon icon={faUser} className="h-3 w-3 mr-2" />
                   {t('nav.profile')}
                 </Button>
               </Link>
               {user && (
                 <Button variant="ghost" size="sm" className="w-full justify-start text-xs text-destructive" onClick={handleLogout}>
-                  <LogOut className="h-3 w-3 mr-2" />
+                  <FontAwesomeIcon icon={faArrowRightFromBracket} className="h-3 w-3 mr-2" />
                   {t('nav.logout')}
                 </Button>
               )}

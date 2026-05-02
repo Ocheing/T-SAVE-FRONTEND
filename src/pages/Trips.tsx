@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, MapPin, DollarSign, Calendar, MessageCircle, Heart, Star, Loader2 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart, faSearch, faSpinner, faLocationDot } from "@fortawesome/free-solid-svg-icons";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ const Trips = () => {
           <div className="flex gap-2">
             <Link to="/wishlist">
               <Button size="icon" variant="outline" className="h-10 w-10">
-                <Heart className="h-5 w-5" />
+                <FontAwesomeIcon icon={faHeart} className="h-5 w-5" />
               </Button>
             </Link>
           </div>
@@ -58,7 +59,7 @@ const Trips = () => {
 
         <div className="mb-6 animate-scale-in">
           <div className="relative max-w-2xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder={t('common.search') + "..."}
               value={searchQuery}
@@ -70,7 +71,7 @@ const Trips = () => {
 
         {isLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <FontAwesomeIcon icon={faSpinner} className="h-10 w-10 animate-spin text-primary" />
           </div>
         ) : searchQuery ? (
           <div className="grid md:grid-cols-3 gap-6">
@@ -112,7 +113,7 @@ const Trips = () => {
                         <div className="text-white">
                           <h3 className="font-bold text-2xl mb-1">{dest.name}</h3>
                           <p className="text-xs text-white/80 flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {dest.location}
+                            <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3" /> {dest.location}
                           </p>
                         </div>
                         <div className="text-right">
@@ -167,7 +168,7 @@ const DestinationCard = ({ destination, onStartSaving }: { destination: Destinat
         />
         <div className="absolute top-3 right-3">
           <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-            <Heart className="h-4 w-4" />
+            <FontAwesomeIcon icon={faHeart} className="h-4 w-4" />
           </Button>
         </div>
         {destination.popularity_badge && (
@@ -184,7 +185,7 @@ const DestinationCard = ({ destination, onStartSaving }: { destination: Destinat
           <div>
             <h3 className="text-lg font-bold truncate max-w-[150px]">{destination.name}</h3>
             <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
+              <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3" />
               {destination.location || 'various'}
             </p>
           </div>

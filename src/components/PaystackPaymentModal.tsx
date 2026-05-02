@@ -123,8 +123,9 @@ export default function PaystackPaymentModal({
                     .single();
 
                 if (fetchErr) throw new Error('Failed to fetch trip: ' + fetchErr.message);
+                if (!tripData) throw new Error('Trip not found');
 
-                const newSaved = (Number(tripData?.saved_amount) || 0) + amount;
+                const newSaved = (Number(tripData.saved_amount) || 0) + amount;
 
                 const { error: updateErr } = await supabase
                     .from('trips')

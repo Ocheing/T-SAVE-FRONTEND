@@ -149,9 +149,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 // Check session from cookies/storage
                 const { data, error } = await supabase.auth.getSession();
-                const session = data?.session;
+                let session = data?.session;
 
-                if (error) throw error;
+                if (error) {
+                    console.warn('[AuthContext] Session error, attempting recovery:', error);
+                    try {
+                        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                        if (refreshError) throw refreshError;
+                        session = refreshData?.session ?? null;
+                    } catch (e) {
+                         console.error('[AuthContext] Session recovery failed:', e);
+                         session = null;
+                         // We don't throw here, we just start as unauthenticated gracefully
+                    }
+                }
+
                 if (!mounted) return;
 
                 setSession(session);
@@ -196,12 +208,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setSession(newSession);
                     setUser(newSession?.user ?? null);
 
-                    if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+                    if (newSession?.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
                         if (event === 'SIGNED_IN' && manualSignInRef.current) {
                             // signIn() already fetched profile+role — skip the redundant re-fetch
                             manualSignInRef.current = false;
                         } else {
-                            // Normal auth change (e.g., Google OAuth callback, token refresh)
+                            // Normal auth change (e.g., Google OAuth callback, token refresh, initial session)
                             await fetchUserData(newSession.user.id, true);
                         }
                     }

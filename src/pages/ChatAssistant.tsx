@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Bot, Loader2, MapPin, DollarSign, HelpCircle, Plane, AlertTriangle, Trash2 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPaperPlane, faRobot, faSpinner, faLocationDot, faDollarSign, faCircleQuestion, faPlane, faTriangleExclamation, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -57,10 +58,10 @@ IMPORTANT: Never include HTML tags, script tags, or any code in your responses. 
 // Quick Prompts
 // ============================================================================
 const QUICK_PROMPTS = [
-  { icon: DollarSign, label: "Saving Tips", prompt: "How much should I save weekly for a trip to Diani Beach?" },
-  { icon: MapPin, label: "Destinations", prompt: "Recommend destinations I can visit with my current savings" },
-  { icon: Plane, label: "Booking", prompt: "Explain how the booking and payment options work" },
-  { icon: HelpCircle, label: "How it works", prompt: "How does smart saving work on TembeaSave?" },
+  { icon: faDollarSign, label: "Saving Tips", prompt: "How much should I save weekly for a trip to Diani Beach?" },
+  { icon: faLocationDot, label: "Destinations", prompt: "Recommend destinations I can visit with my current savings" },
+  { icon: faPlane, label: "Booking", prompt: "Explain how the booking and payment options work" },
+  { icon: faCircleQuestion, label: "How it works", prompt: "How does smart saving work on TembeaSave?" },
 ];
 
 // ============================================================================
@@ -562,7 +563,7 @@ What would you like to know more about?`;
         <div className="mb-6 animate-fade-in">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <Bot className="h-6 w-6 text-primary" />
+              <FontAwesomeIcon icon={faRobot} className="h-6 w-6 text-primary" />
               <h1 className="text-3xl font-bold">AI Travel Assistant</h1>
             </div>
             {messages.length > 1 && (
@@ -572,7 +573,7 @@ What would you like to know more about?`;
                 onClick={handleClearChat}
                 className="text-muted-foreground hover:text-destructive"
               >
-                <Trash2 className="h-4 w-4 mr-1" />
+                <FontAwesomeIcon icon={faTrashCan} className="h-4 w-4 mr-1" />
                 Clear Chat
               </Button>
             )}
@@ -591,7 +592,7 @@ What would you like to know more about?`;
               onClick={() => handleSend(prompt.prompt)}
               disabled={isLoading}
             >
-              <prompt.icon className="h-3 w-3 mr-1" />
+              <FontAwesomeIcon icon={prompt.icon} className="h-3 w-3 mr-1" />
               {prompt.label}
             </Button>
           ))}
@@ -600,7 +601,7 @@ What would you like to know more about?`;
         {/* Error Banner */}
         {error && (
           <div className="mb-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2 text-sm animate-fade-in">
-            <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+            <FontAwesomeIcon icon={faTriangleExclamation} className="h-4 w-4 text-destructive flex-shrink-0" />
             <span className="text-destructive">{error}</span>
             <Button
               variant="ghost"
@@ -624,7 +625,7 @@ What would you like to know more about?`;
                 >
                   <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarFallback className={message.role === "user" ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-primary to-secondary text-primary-foreground"}>
-                      {message.role === "user" ? (profile?.full_name?.[0] || "U") : <Bot className="h-4 w-4" />}
+                      {message.role === "user" ? (profile?.full_name?.[0] || "U") : <FontAwesomeIcon icon={faRobot} className="h-4 w-4" />}
                     </AvatarFallback>
                   </Avatar>
                   <div
@@ -647,12 +648,12 @@ What would you like to know more about?`;
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground">
-                      <Bot className="h-4 w-4" />
+                      <FontAwesomeIcon icon={faRobot} className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="rounded-lg px-4 py-3 bg-muted">
                     <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin" />
                       <span className="text-sm text-muted-foreground">Thinking...</span>
                     </div>
                   </div>
@@ -686,7 +687,7 @@ What would you like to know more about?`;
                 disabled={isLoading || !input.trim()}
                 aria-label="Send message"
               >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {isLoading ? <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin" /> : <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />}
               </Button>
             </div>
             <div className="flex items-center justify-between mt-2">

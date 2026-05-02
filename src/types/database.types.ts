@@ -61,6 +61,7 @@ export type Database = {
                     created_at?: string | null
                     updated_at?: string | null
                 }
+                Relationships: []
             }
             payment_methods: {
                 Row: {
@@ -96,6 +97,7 @@ export type Database = {
                     created_at?: string | null
                     updated_at?: string | null
                 }
+                Relationships: []
             }
             trips: {
                 Row: {
@@ -179,6 +181,7 @@ export type Database = {
                     monthly_target?: number | null
                     location?: string | null
                 }
+                Relationships: []
             }
             wishlist: {
                 Row: {
@@ -220,6 +223,7 @@ export type Database = {
                     reviews_count?: number | null
                     created_at?: string | null
                 }
+                Relationships: []
             }
             transactions: {
                 Row: {
@@ -255,6 +259,7 @@ export type Database = {
                     status?: 'pending' | 'completed' | 'failed' | 'cancelled' | null
                     created_at?: string | null
                 }
+                Relationships: []
             }
             destinations: {
                 Row: {
@@ -311,6 +316,7 @@ export type Database = {
                     created_at?: string | null
                     updated_at?: string | null
                 }
+                Relationships: []
             }
             events: {
                 Row: {
@@ -361,6 +367,7 @@ export type Database = {
                     created_at?: string | null
                     updated_at?: string | null
                 }
+                Relationships: []
             }
             admin_users: {
                 Row: {
@@ -381,6 +388,7 @@ export type Database = {
                     created_at?: string | null
                     updated_at?: string | null
                 }
+                Relationships: []
             }
             paystack_payments: {
                 Row: {
@@ -467,6 +475,7 @@ export type Database = {
                     created_at?: string | null
                     updated_at?: string | null
                 }
+                Relationships: []
             }
         }
         Views: {

@@ -1,4 +1,5 @@
-import { MapPin, Calendar, TrendingUp } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLocationDot, faCalendarDays, faArrowTrendUp } from "@fortawesome/free-solid-svg-icons";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Button } from "./ui/button";
@@ -30,7 +31,7 @@ const TripCard = ({ destination, targetAmount, savedAmount, targetDate, image, o
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
           <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
+            <FontAwesomeIcon icon={faLocationDot} className="h-5 w-5" />
             {destination}
           </h3>
         </div>
@@ -57,12 +58,12 @@ const TripCard = ({ destination, targetAmount, savedAmount, targetDate, image, o
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
+          <FontAwesomeIcon icon={faCalendarDays} className="h-4 w-4" />
           <span>Target: {targetDate}</span>
         </div>
 
         <Button className="w-full" variant="hero" size="sm" onClick={onAddFunds}>
-          <TrendingUp className="h-4 w-4 mr-2" />
+          <FontAwesomeIcon icon={faArrowTrendUp} className="h-4 w-4 mr-2" />
           Add Funds
         </Button>
       </div>

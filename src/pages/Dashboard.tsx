@@ -1,4 +1,9 @@
-import { DollarSign, TrendingUp, Target, Calendar, MessageCircle, Plus, Receipt, Plane, CalendarDays, Compass, ArrowRight, Star, Palmtree, Mountain, Building2, Compass as AdventureIcon, Theater, Music, Loader2, MapPin } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faDollarSign, faArrowTrendUp, faBullseye, faCalendar, faCommentDots,
+  faPlus, faReceipt, faPlane, faCalendarDays, faCompass, faArrowRight,
+  faStar, faLocationDot, faSpinner
+} from "@fortawesome/free-solid-svg-icons";
 import StatCard from "@/components/StatCard";
 import TripCard from "@/components/TripCard";
 import { Card } from "@/components/ui/card";
@@ -68,9 +73,9 @@ const Dashboard = () => {
   })();
 
   const quickActions = [
-    { icon: Plus, label: t('dashboard.addSavingsGoal'), link: "/travel-goals" },
-    { icon: Plane, label: t('dashboard.bookTrip'), link: "/trips" },
-    { icon: Receipt, label: t('dashboard.viewTransactions'), link: "/transactions" }
+    { icon: faPlus, label: t('dashboard.addSavingsGoal'), link: "/travel-goals" },
+    { icon: faPlane, label: t('dashboard.bookTrip'), link: "/trips" },
+    { icon: faReceipt, label: t('dashboard.viewTransactions'), link: "/transactions" }
   ];
 
   return (
@@ -79,12 +84,12 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-6 animate-fade-in flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">{t('dashboard.welcome')}, {userName}! <Plane className="h-6 w-6 text-primary" /></h1>
+            <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">{t('dashboard.welcome')}, {userName}! <FontAwesomeIcon icon={faPlane} className="h-6 w-6 text-primary" /></h1>
             <p className="text-xs text-muted-foreground">{t('travelGoals.subtitle')}</p>
           </div>
           <Link to="/chat">
             <Button size="icon" variant="outline" className="h-9 w-9">
-              <MessageCircle className="h-4 w-4" />
+              <FontAwesomeIcon icon={faCommentDots} className="h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -93,11 +98,11 @@ const Dashboard = () => {
         {!hasPreferences && (
           <Card className="p-4 mb-6 bg-primary/10 border-primary/20 animate-fade-in relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Compass className="h-24 w-24 text-primary" />
+              <FontAwesomeIcon icon={faCompass} className="h-24 w-24 text-primary" />
             </div>
             <div className="flex items-start gap-4 relative z-10">
               <div className="p-2 bg-background rounded-full shadow-sm">
-                <Compass className="h-6 w-6 text-primary" />
+                <FontAwesomeIcon icon={faCompass} className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
                 <h3 className="text-base font-bold mb-1">{t('dashboard.designHolidays')}, {userName}!</h3>
@@ -107,7 +112,7 @@ const Dashboard = () => {
                 <Link to="/quiz">
                   <Button variant="hero" size="sm">
                     {t('dashboard.takeQuiz')}
-                    <ArrowRight className="ml-2 h-3 w-3" />
+                    <FontAwesomeIcon icon={faArrowRight} className="ml-2 h-3 w-3" />
                   </Button>
                 </Link>
               </div>
@@ -120,7 +125,7 @@ const Dashboard = () => {
           <StatCard
             title={t('dashboard.totalSavings')}
             value={formatPrice(tripStats?.totalSaved || 0)}
-            icon={DollarSign}
+            icon={faDollarSign}
             trend={transactionStats?.percentChange ? `${transactionStats.percentChange > 0 ? '+' : ''}${transactionStats.percentChange}% this month` : undefined}
             trendUp={transactionStats?.percentChange ? transactionStats.percentChange > 0 : undefined}
             iconColor="text-blue-600"
@@ -129,7 +134,7 @@ const Dashboard = () => {
           <StatCard
             title={t('dashboard.monthlyAverage')}
             value={formatPrice(transactionStats?.thisMonthSavings || 0)}
-            icon={TrendingUp}
+            icon={faArrowTrendUp}
             trend={transactionStats?.lastMonthSavings ? `vs ${formatPrice(transactionStats.lastMonthSavings)}` : "Keep saving!"}
             trendUp={true}
             iconColor="text-green-600"
@@ -138,14 +143,14 @@ const Dashboard = () => {
           <StatCard
             title={t('dashboard.activeGoals')}
             value={String(tripStats?.activeGoals || 0)}
-            icon={Target}
+            icon={faBullseye}
             iconColor="text-purple-600"
             iconBgColor="bg-purple-100"
           />
           <StatCard
             title={t('dashboard.nextTrip')}
             value={nextTripInfo}
-            icon={Calendar}
+            icon={faCalendar}
             iconColor="text-amber-600"
             iconBgColor="bg-amber-100"
           />
@@ -163,7 +168,7 @@ const Dashboard = () => {
               <div className="flex justify-between items-center mb-4 relative z-10">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 bg-primary/10 rounded-lg">
-                    <Star className="h-4 w-4 text-primary" />
+                    <FontAwesomeIcon icon={faStar} className="h-4 w-4 text-primary" />
                   </div>
                   <h2 className="text-lg font-bold">Your Travel Goals</h2>
                 </div>
@@ -214,7 +219,7 @@ const Dashboard = () => {
               <div className="grid md:grid-cols-3 gap-3">
                 {isLoadingDestinations ? (
                   <div className="col-span-full flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <FontAwesomeIcon icon={faSpinner} className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : (
                   featuredDestinations.map((dest, index) => (
@@ -240,7 +245,7 @@ const Dashboard = () => {
             <Card className="p-4 border-primary/10 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5 text-primary" />
+                  <FontAwesomeIcon icon={faCalendarDays} className="h-5 w-5 text-primary" />
                   <h2 className="text-base font-bold">{t('dashboard.upcomingEvents')}</h2>
                 </div>
                 <Badge variant="secondary" className="text-[10px] font-bold">For You</Badge>
@@ -248,7 +253,7 @@ const Dashboard = () => {
               <div className="space-y-4">
                 {isLoadingEvents ? (
                   <div className="flex justify-center py-6">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <FontAwesomeIcon icon={faSpinner} className="h-5 w-5 animate-spin text-primary" />
                   </div>
                 ) : (recommendedEvents || []).length > 0 ? (
                   recommendedEvents?.map((event, index) => (
@@ -261,10 +266,10 @@ const Dashboard = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{event.name}</h3>
-                            {event.is_featured && <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500" />}
+                            {event.is_featured && <FontAwesomeIcon icon={faStar} className="h-2.5 w-2.5 text-amber-500" />}
                           </div>
                           <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
-                            <MapPin className="h-2.5 w-2.5" /> {event.location}
+                            <FontAwesomeIcon icon={faLocationDot} className="h-2.5 w-2.5" /> {event.location}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-[10px] font-bold text-primary">{formatPrice(Number(event.price))}</span>
@@ -292,7 +297,7 @@ const Dashboard = () => {
                 {quickActions.map((action, index) => (
                   <Link key={index} to={action.link}>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" size="sm">
-                      <action.icon className="h-3 w-3 mr-2 text-muted-foreground" />
+                      <FontAwesomeIcon icon={action.icon} className="h-3 w-3 mr-2 text-muted-foreground" />
                       {/* We're using action.label which is hardcoded in quickActions array. 
                           We should ideally translate that array too, but it's defined inside component. */}
                       {action.label}

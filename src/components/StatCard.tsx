@@ -1,18 +1,19 @@
-import { LucideIcon } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Card } from "./ui/card";
 import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
   value: string;
-  icon: LucideIcon;
+  icon: IconDefinition;
   trend?: string;
   trendUp?: boolean;
   iconColor?: string;
   iconBgColor?: string;
 }
 
-const StatCard = ({ title, value, icon: Icon, trend, trendUp, iconColor, iconBgColor }: StatCardProps) => {
+const StatCard = ({ title, value, icon, trend, trendUp, iconColor, iconBgColor }: StatCardProps) => {
   return (
     <Card className="p-6 hover:shadow-[var(--shadow-card)] transition-all duration-300">
       <div className="flex items-start justify-between">
@@ -26,7 +27,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, iconColor, iconBgC
           )}
         </div>
         <div className={cn("p-3 rounded-xl", iconBgColor || "bg-gradient-ocean")}>
-          <Icon className={cn("h-6 w-6", iconColor || "text-white")} />
+          <FontAwesomeIcon icon={icon} className={cn("h-6 w-6", iconColor || "text-white")} />
         </div>
       </div>
     </Card>

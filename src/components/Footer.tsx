@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Star, Youtube, Instagram, Twitter, Facebook } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
+import { faYoutube, faInstagram, faXTwitter, faTiktok, faFacebook, faPinterest } from '@fortawesome/free-brands-svg-icons';
 import { Link } from "react-router-dom";
-import { FaTiktok, FaPinterest } from "react-icons/fa";
 import { supabase } from "@/lib/supabase";
 
 const Footer = () => {
@@ -34,9 +36,10 @@ const Footer = () => {
             <div className="flex items-center gap-2 mt-3">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
+                  <FontAwesomeIcon
                     key={star}
-                    className={`h-3 w-3 ${star <= Math.round(reviewStats.rating) ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted"}`}
+                    icon={star <= Math.round(reviewStats.rating) ? faStar : farStar}
+                    className={`h-3 w-3 ${star <= Math.round(reviewStats.rating) ? "text-yellow-400" : "text-muted"}`}
                   />
                 ))}
               </div>
@@ -91,27 +94,27 @@ const Footer = () => {
             <div className="flex flex-wrap gap-2">
               <a href="https://youtube.com" target="_blank" rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Youtube className="h-4 w-4" />
+                <FontAwesomeIcon icon={faYoutube} className="h-4 w-4" />
               </a>
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Instagram className="h-4 w-4" />
+                <FontAwesomeIcon icon={faInstagram} className="h-4 w-4" />
               </a>
               <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Twitter className="h-4 w-4" />
+                <FontAwesomeIcon icon={faXTwitter} className="h-4 w-4" />
               </a>
               <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
-                <FaTiktok className="h-4 w-4" />
+                <FontAwesomeIcon icon={faTiktok} className="h-4 w-4" />
               </a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Facebook className="h-4 w-4" />
+                <FontAwesomeIcon icon={faFacebook} className="h-4 w-4" />
               </a>
               <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
-                <FaPinterest className="h-4 w-4" />
+                <FontAwesomeIcon icon={faPinterest} className="h-4 w-4" />
               </a>
             </div>
           </div>

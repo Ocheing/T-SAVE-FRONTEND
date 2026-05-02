@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Receipt, Search, Filter, ArrowUpCircle, ArrowDownCircle, Loader2, Calendar, DollarSign, Tag, Info } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faReceipt, faSearch, faFilter, faCircleArrowUp, faCircleArrowDown, faSpinner, faCalendar, faTag, faCircleInfo } from "@fortawesome/free-solid-svg-icons";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ const Transactions = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <FontAwesomeIcon icon={faSpinner} className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -36,7 +37,7 @@ const Transactions = () => {
                 <div className="mb-8 animate-fade-in">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-primary/10 rounded-lg">
-                            <Receipt className="h-6 w-6 text-primary" />
+                            <FontAwesomeIcon icon={faReceipt} className="h-6 w-6 text-primary" />
                         </div>
                         <h1 className="text-3xl font-bold">Transaction History</h1>
                     </div>
@@ -47,7 +48,7 @@ const Transactions = () => {
                 <Card className="p-4 mb-6 shadow-sm border-primary/10 animate-scale-in">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search transactions..."
                                 className="pl-9"
@@ -58,7 +59,7 @@ const Transactions = () => {
                         <div className="flex gap-2">
                             <Select value={filterType} onValueChange={setFilterType}>
                                 <SelectTrigger className="w-[150px]">
-                                    <Filter className="h-4 w-4 mr-2" />
+                                    <FontAwesomeIcon icon={faFilter} className="h-4 w-4 mr-2" />
                                     <SelectValue placeholder="Type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -79,7 +80,7 @@ const Transactions = () => {
                 <div className="space-y-3">
                     {!filteredTransactions || filteredTransactions.length === 0 ? (
                         <Card className="p-12 text-center animate-fade-in">
-                            <Receipt className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+                            <FontAwesomeIcon icon={faReceipt} className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
                             <h3 className="text-lg font-semibold mb-1">No transactions found</h3>
                             <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms.</p>
                         </Card>
@@ -97,11 +98,11 @@ const Transactions = () => {
                                                     'bg-blue-100 text-blue-600'
                                             }`}>
                                             {t.type === 'deposit' ? (
-                                                <ArrowUpCircle className="h-5 w-5" />
+                                                <FontAwesomeIcon icon={faCircleArrowUp} className="h-5 w-5" />
                                             ) : t.type === 'withdrawal' ? (
-                                                <ArrowDownCircle className="h-5 w-5" />
+                                                <FontAwesomeIcon icon={faCircleArrowDown} className="h-5 w-5" />
                                             ) : (
-                                                <Info className="h-5 w-5" />
+                                                <FontAwesomeIcon icon={faCircleInfo} className="h-5 w-5" />
                                             )}
                                         </div>
                                         <div>
@@ -110,11 +111,11 @@ const Transactions = () => {
                                             </h3>
                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
                                                 <span className="flex items-center gap-1">
-                                                    <Calendar className="h-3 w-3" />
+                                                    <FontAwesomeIcon icon={faCalendar} className="h-3 w-3" />
                                                     {format(new Date(t.created_at), 'MMM dd, yyyy HH:mm')}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <Tag className="h-3 w-3" />
+                                                    <FontAwesomeIcon icon={faTag} className="h-3 w-3" />
                                                     ID: {t.id.slice(0, 8)}...
                                                 </span>
                                                 {t.status && (

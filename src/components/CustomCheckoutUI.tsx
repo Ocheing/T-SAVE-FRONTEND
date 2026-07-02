@@ -19,7 +19,7 @@ export interface CustomCheckoutProps {
     amount: number;
     goalName?: string;
     onClose: () => void;
-    onPay: (method: string, details: any) => void;
+    onPay: (method: string, details: Record<string, string>) => void;
     isProcessing?: boolean;
 }
 

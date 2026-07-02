@@ -22,90 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/tembeasave-logo.png";
 
-// Comprehensive currency list
-const CURRENCIES = [
-  { code: "KES", name: "Kenyan Shilling", symbol: "KSh", flag: "🇰🇪" },
-  { code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸" },
-  { code: "EUR", name: "Euro", symbol: "€", flag: "🇪🇺" },
-  { code: "GBP", name: "British Pound", symbol: "£", flag: "🇬🇧" },
-  { code: "JPY", name: "Japanese Yen", symbol: "¥", flag: "🇯🇵" },
-  { code: "AUD", name: "Australian Dollar", symbol: "A$", flag: "🇦🇺" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "C$", flag: "🇨🇦" },
-  { code: "CHF", name: "Swiss Franc", symbol: "CHF", flag: "🇨🇭" },
-  { code: "CNY", name: "Chinese Yuan", symbol: "¥", flag: "🇨🇳" },
-  { code: "INR", name: "Indian Rupee", symbol: "₹", flag: "🇮🇳" },
-  { code: "ZAR", name: "South African Rand", symbol: "R", flag: "🇿🇦" },
-  { code: "AED", name: "UAE Dirham", symbol: "د.إ", flag: "🇦🇪" },
-  { code: "SAR", name: "Saudi Riyal", symbol: "﷼", flag: "🇸🇦" },
-  { code: "NGN", name: "Nigerian Naira", symbol: "₦", flag: "🇳🇬" },
-  { code: "GHS", name: "Ghanaian Cedi", symbol: "₵", flag: "🇬🇭" },
-  { code: "TZS", name: "Tanzanian Shilling", symbol: "TSh", flag: "🇹🇿" },
-  { code: "UGX", name: "Ugandan Shilling", symbol: "USh", flag: "🇺🇬" },
-  { code: "RWF", name: "Rwandan Franc", symbol: "FRw", flag: "🇷🇼" },
-  { code: "ETB", name: "Ethiopian Birr", symbol: "Br", flag: "🇪🇹" },
-  { code: "EGP", name: "Egyptian Pound", symbol: "E£", flag: "🇪🇬" },
-  { code: "MAD", name: "Moroccan Dirham", symbol: "MAD", flag: "🇲🇦" },
-  { code: "BRL", name: "Brazilian Real", symbol: "R$", flag: "🇧🇷" },
-  { code: "MXN", name: "Mexican Peso", symbol: "Mex$", flag: "🇲🇽" },
-  { code: "ARS", name: "Argentine Peso", symbol: "AR$", flag: "🇦🇷" },
-  { code: "COP", name: "Colombian Peso", symbol: "COL$", flag: "🇨🇴" },
-  { code: "KRW", name: "South Korean Won", symbol: "₩", flag: "🇰🇷" },
-  { code: "SGD", name: "Singapore Dollar", symbol: "S$", flag: "🇸🇬" },
-  { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", flag: "🇭🇰" },
-  { code: "THB", name: "Thai Baht", symbol: "฿", flag: "🇹🇭" },
-  { code: "MYR", name: "Malaysian Ringgit", symbol: "RM", flag: "🇲🇾" },
-  { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp", flag: "🇮🇩" },
-  { code: "PHP", name: "Philippine Peso", symbol: "₱", flag: "🇵🇭" },
-  { code: "VND", name: "Vietnamese Dong", symbol: "₫", flag: "🇻🇳" },
-  { code: "PKR", name: "Pakistani Rupee", symbol: "₨", flag: "🇵🇰" },
-  { code: "RUB", name: "Russian Ruble", symbol: "₽", flag: "🇷🇺" },
-  { code: "TRY", name: "Turkish Lira", symbol: "₺", flag: "🇹🇷" },
-  { code: "PLN", name: "Polish Zloty", symbol: "zł", flag: "🇵🇱" },
-  { code: "SEK", name: "Swedish Krona", symbol: "kr", flag: "🇸🇪" },
-  { code: "NOK", name: "Norwegian Krone", symbol: "kr", flag: "🇳🇴" },
-  { code: "DKK", name: "Danish Krone", symbol: "kr", flag: "🇩🇰" },
-  { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", flag: "🇳🇿" },
-  { code: "ILS", name: "Israeli Shekel", symbol: "₪", flag: "🇮🇱" },
-];
-
-// Comprehensive language list
-const LANGUAGES = [
-  { code: "en", name: "English", native: "English", flag: "🇬🇧" },
-  { code: "sw", name: "Swahili", native: "Kiswahili", flag: "🇰🇪" },
-  { code: "fr", name: "French", native: "Français", flag: "🇫🇷" },
-  { code: "es", name: "Spanish", native: "Español", flag: "🇪🇸" },
-  { code: "de", name: "German", native: "Deutsch", flag: "🇩🇪" },
-  { code: "it", name: "Italian", native: "Italiano", flag: "🇮🇹" },
-  { code: "pt", name: "Portuguese", native: "Português", flag: "🇵🇹" },
-  { code: "zh", name: "Chinese", native: "中文", flag: "🇨🇳" },
-  { code: "ja", name: "Japanese", native: "日本語", flag: "🇯🇵" },
-  { code: "ko", name: "Korean", native: "한국어", flag: "🇰🇷" },
-  { code: "ar", name: "Arabic", native: "العربية", flag: "🇸🇦" },
-  { code: "hi", name: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
-  { code: "bn", name: "Bengali", native: "বাংলা", flag: "🇧🇩" },
-  { code: "ru", name: "Russian", native: "Русский", flag: "🇷🇺" },
-  { code: "tr", name: "Turkish", native: "Türkçe", flag: "🇹🇷" },
-  { code: "nl", name: "Dutch", native: "Nederlands", flag: "🇳🇱" },
-  { code: "pl", name: "Polish", native: "Polski", flag: "🇵🇱" },
-  { code: "vi", name: "Vietnamese", native: "Tiếng Việt", flag: "🇻🇳" },
-  { code: "th", name: "Thai", native: "ไทย", flag: "🇹🇭" },
-  { code: "id", name: "Indonesian", native: "Bahasa Indonesia", flag: "🇮🇩" },
-  { code: "ms", name: "Malay", native: "Bahasa Melayu", flag: "🇲🇾" },
-  { code: "am", name: "Amharic", native: "አማርኛ", flag: "🇪🇹" },
-  { code: "ha", name: "Hausa", native: "Hausa", flag: "🇳🇬" },
-  { code: "yo", name: "Yoruba", native: "Yorùbá", flag: "🇳🇬" },
-  { code: "zu", name: "Zulu", native: "isiZulu", flag: "🇿🇦" },
-  { code: "af", name: "Afrikaans", native: "Afrikaans", flag: "🇿🇦" },
-  { code: "he", name: "Hebrew", native: "עברית", flag: "🇮🇱" },
-  { code: "fa", name: "Persian", native: "فارسی", flag: "🇮🇷" },
-  { code: "ur", name: "Urdu", native: "اردو", flag: "🇵🇰" },
-  { code: "uk", name: "Ukrainian", native: "Українська", flag: "🇺🇦" },
-  { code: "el", name: "Greek", native: "Ελληνικά", flag: "🇬🇷" },
-  { code: "sv", name: "Swedish", native: "Svenska", flag: "🇸🇪" },
-  { code: "no", name: "Norwegian", native: "Norsk", flag: "🇳🇴" },
-  { code: "da", name: "Danish", native: "Dansk", flag: "🇩🇰" },
-  { code: "fi", name: "Finnish", native: "Suomi", flag: "🇫🇮" },
-];
+// Removed local CURRENCIES and LANGUAGES, now imported from context
 
 interface NavbarProps {
   onThemeToggle: () => void;
@@ -113,9 +30,10 @@ interface NavbarProps {
   isHomePage?: boolean;
 }
 
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { useCurrency, CURRENCIES } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
+import { LANGUAGES } from "@/contexts/LanguageContext";
 
 const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

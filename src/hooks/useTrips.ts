@@ -71,7 +71,6 @@ export function useCreateTrip() {
             const tripData = { ...trip, user_id: user.id };
             const { data, error } = await supabase
                 .from('trips')
-                // @ts-expect-error - Supabase type generation mismatch with actual schema
                 .insert(tripData)
                 .select()
                 .single();
@@ -92,7 +91,6 @@ export function useUpdateTrip() {
         mutationFn: async ({ id, updates }: { id: string; updates: TripUpdate }) => {
             const { data, error } = await supabase
                 .from('trips')
-                // @ts-expect-error - Supabase type generation mismatch with actual schema
                 .update(updates)
                 .eq('id', id)
                 .select()

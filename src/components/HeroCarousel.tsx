@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { ChevronLeft, ChevronRight, Wallet, TrendingUp, Target } from "lucide-react";
 import { Button } from "./ui/button";
 import heroBeach from "@/assets/hero-beach.jpg";
@@ -19,6 +19,8 @@ const HeroCarousel = () => {
   const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const isAnimatingRef = useRef(false);
 
   // Memoize slides to prevent recreation on every render
   const slides = useMemo(() => [
@@ -44,20 +46,28 @@ const HeroCarousel = () => {
 
   // Stable function references with useCallback
   const handleNext = useCallback(() => {
-    if (!isAnimating) {
+    if (!isAnimatingRef.current) {
+      isAnimatingRef.current = true;
       setIsAnimating(true);
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-      setTimeout(() => setIsAnimating(false), 500);
+      setTimeout(() => {
+        isAnimatingRef.current = false;
+        setIsAnimating(false);
+      }, 500);
     }
-  }, [isAnimating, slides.length]);
+  }, [slides.length]);
 
   const handlePrev = useCallback(() => {
-    if (!isAnimating) {
+    if (!isAnimatingRef.current) {
+      isAnimatingRef.current = true;
       setIsAnimating(true);
       setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-      setTimeout(() => setIsAnimating(false), 500);
+      setTimeout(() => {
+        isAnimatingRef.current = false;
+        setIsAnimating(false);
+      }, 500);
     }
-  }, [isAnimating, slides.length]);
+  }, [slides.length]);
 
   const handleDotClick = useCallback((index: number) => {
     setCurrentSlide(index);

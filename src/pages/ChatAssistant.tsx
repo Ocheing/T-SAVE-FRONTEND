@@ -303,6 +303,166 @@ What would you like help with today?`,
   }, [trips, wishlist, destinations]);
 
   // ============================================================================
+  // Fallback responses (when Gemini API is unavailable)
+  // Uses LIVE destination data from the database
+  // ============================================================================
+  const generateFallbackResponse = useCallback((message: string): string => {
+    const lowerMessage = message.toLowerCase();
+    const availableDestinations = destinations || [];
+
+    // --- SAVING TIPS: Ask which destination first ---
+    if (lowerMessage.includes('save') || lowerMessage.includes('saving') || lowerMessage.includes('budget')) {
+      // Check if user mentioned a specific destination
+      const mentionedDest = findDestination(message, availableDestinations);
+
+      if (mentionedDest) {
+        return generateSavingsPlan(mentionedDest);
+      }
+
+      // No specific destination mentioned — ask which one
+      setAwaitingSavingsDestination(true);
+
+      let response = `I'd love to help you create a savings plan! 💰\n\n**Which trip or destination would you like to save for?**`;
+      if (availableDestinations.length > 0) {
+        response += `\n\nHere are some of our available destinations:\n${formatDestinationsList(availableDestinations, 5)}`;
+        response += `\n\nJust tell me the name of the destination and I'll calculate a personalized savings plan for you! 😊`;
+      }
+      return response;
+    }
+
+    // --- CAN I REACH MY GOAL? ---
+    if (lowerMessage.includes('reach') && lowerMessage.includes('month')) {
+      return `Let me help you calculate! 📊 
+
+To determine if you can reach your goal in 3 months, I need to know:
+1. Your target amount
+2. How much you can save weekly
+
+As a general rule, if you can set aside 20-30% of your income for travel savings, you'll reach your goals faster. 
+
+What's your target destination and budget?`;
+    }
+
+    // --- DESTINATION RECOMMENDATIONS: Always use live data ---
+    if (lowerMessage.includes('recommend') || lowerMessage.includes('destination') || lowerMessage.includes('suggest') || lowerMessage.includes('where') || lowerMessage.includes('beach') || lowerMessage.includes('adventure') || lowerMessage.includes('available')) {
+      if (availableDestinations.length === 0) {
+        return `We're currently updating our destination catalog. Please check back soon or visit the Destinations page for the latest offerings! 🌍`;
+      }
+
+      const totalSaved = trips?.reduce((sum, t) => sum + (t.saved_amount || 0), 0) || 0;
+
+      // Check if user asked for a specific category
+      const categoryKeywords = ['beach', 'mountain', 'city', 'adventure', 'cultural', 'event'];
+      const requestedCategory = categoryKeywords.find(cat => lowerMessage.includes(cat));
+
+      let filteredDests = availableDestinations;
+      if (requestedCategory) {
+        filteredDests = availableDestinations.filter(d =>
+          (d.categories || []).some(c => c.toLowerCase().includes(requestedCategory))
+        );
+        if (filteredDests.length === 0) {
+          return `I don't have any **${requestedCategory}** destinations at the moment, but here are all our available destinations:\n\n${formatDestinationsList(availableDestinations)}\n\nWould you like details about any of these? 🌟`;
+        }
+      }
+
+      // Budget-aware recommendations
+      if (totalSaved > 0) {
+        const withinBudget = filteredDests.filter(d => Number(d.estimated_cost) <= totalSaved);
+        const stretch = filteredDests.filter(d => Number(d.estimated_cost) > totalSaved && Number(d.estimated_cost) <= totalSaved * 1.5);
+
+        let response = `Based on your current savings of KES ${totalSaved.toLocaleString()}, here are some destinations! 🌴\n`;
+
+        if (withinBudget.length > 0) {
+          response += `\n**Within Your Budget:**\n${formatDestinationsList(withinBudget)}`;
+        }
+        if (stretch.length > 0) {
+          response += `\n\n**Stretch Goals (save a bit more!):**\n${formatDestinationsList(stretch, 3)}`;
+        }
+        if (withinBudget.length === 0 && stretch.length === 0) {
+          response += `\nKeep saving! Here are some goals to work towards:\n${formatDestinationsList(filteredDests)}`;
+        }
+        response += `\n\nWould you like a savings plan for any of these?`;
+        return response;
+      }
+
+      return `Here are our available destinations! 🗺️\n\n${formatDestinationsList(filteredDests)}\n\nTell me your budget and I can give personalized recommendations!`;
+    }
+
+    // --- BOOKING / PAYMENT: No Paystack mention ---
+    if (lowerMessage.includes('package') || lowerMessage.includes('booking') || lowerMessage.includes('payment') || lowerMessage.includes('pay') || lowerMessage.includes('book')) {
+      return `Great question about our booking options! ✈️
+
+**How Booking Works:**
+1. Browse destinations and packages
+2. Choose your preferred package
+3. Complete payment using the supported payment methods on the platform
+
+**Payment Options:**
+• Card payment (Visa, Mastercard)
+• Bank transfer
+• Mobile money (M-Pesa)
+
+**What's Included in Packages:**
+• Accommodation
+• Airport transfers
+• Selected activities
+• Travel insurance (optional)
+
+What destination are you interested in booking?`;
+    }
+
+    // --- HOW IT WORKS ---
+    if (lowerMessage.includes('smart saving') || lowerMessage.includes('how does') || lowerMessage.includes('work')) {
+      return `Here's how TembeaSave works! 🎯
+
+**1. Set Your Goal**
+Choose a destination and set a target amount and date.
+
+**2. Save Regularly**
+Add funds to your savings goal using the supported payment methods. We'll track your progress!
+
+**3. Get Reminders**
+We'll remind you about savings and celebrate your milestones! 🎉
+
+**4. Book Your Trip**
+Once you've saved enough, book directly through our platform.
+
+**5. Travel!**
+Enjoy your well-earned vacation! ✈️
+
+Would you like to create a savings goal now?`;
+    }
+
+    // --- MISSED PAYMENTS ---
+    if (lowerMessage.includes('miss') && lowerMessage.includes('payment')) {
+      return `No worries! Missing a savings deposit happens. 💪
+
+**What Happens:**
+• Your goal timeline extends slightly
+• No penalties or fees
+• You can catch up anytime
+
+**Tips to Stay on Track:**
+• Set up regular deposit reminders
+• Save smaller amounts more frequently
+• Enable savings reminders in your profile
+
+Remember, any progress is good progress! Would you like me to help you adjust your savings plan?`;
+    }
+
+    // --- DEFAULT ---
+    return `I'm here to help you with your travel savings journey! 🌟
+
+I can assist with:
+• 💰 Calculating savings plans for your dream trips
+• 🏝️ Recommending destinations based on your budget
+• ✈️ Explaining booking and payment options
+• ❓ Answering questions about how TembeaSave works
+
+What would you like to know more about?`;
+  }, [destinations, trips]);
+
+  // ============================================================================
   // Send message
   // ============================================================================
   const handleSend = useCallback(async (messageText?: string) => {
@@ -533,165 +693,6 @@ What would you like help with today?`,
     sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // ============================================================================
-  // Fallback responses (when Gemini API is unavailable)
-  // Uses LIVE destination data from the database
-  // ============================================================================
-  const generateFallbackResponse = useCallback((message: string): string => {
-    const lowerMessage = message.toLowerCase();
-    const availableDestinations = destinations || [];
-
-    // --- SAVING TIPS: Ask which destination first ---
-    if (lowerMessage.includes('save') || lowerMessage.includes('saving') || lowerMessage.includes('budget')) {
-      // Check if user mentioned a specific destination
-      const mentionedDest = findDestination(message, availableDestinations);
-
-      if (mentionedDest) {
-        return generateSavingsPlan(mentionedDest);
-      }
-
-      // No specific destination mentioned — ask which one
-      setAwaitingSavingsDestination(true);
-
-      let response = `I'd love to help you create a savings plan! 💰\n\n**Which trip or destination would you like to save for?**`;
-      if (availableDestinations.length > 0) {
-        response += `\n\nHere are some of our available destinations:\n${formatDestinationsList(availableDestinations, 5)}`;
-        response += `\n\nJust tell me the name of the destination and I'll calculate a personalized savings plan for you! 😊`;
-      }
-      return response;
-    }
-
-    // --- CAN I REACH MY GOAL? ---
-    if (lowerMessage.includes('reach') && lowerMessage.includes('month')) {
-      return `Let me help you calculate! 📊 
-
-To determine if you can reach your goal in 3 months, I need to know:
-1. Your target amount
-2. How much you can save weekly
-
-As a general rule, if you can set aside 20-30% of your income for travel savings, you'll reach your goals faster. 
-
-What's your target destination and budget?`;
-    }
-
-    // --- DESTINATION RECOMMENDATIONS: Always use live data ---
-    if (lowerMessage.includes('recommend') || lowerMessage.includes('destination') || lowerMessage.includes('suggest') || lowerMessage.includes('where') || lowerMessage.includes('beach') || lowerMessage.includes('adventure') || lowerMessage.includes('available')) {
-      if (availableDestinations.length === 0) {
-        return `We're currently updating our destination catalog. Please check back soon or visit the Destinations page for the latest offerings! 🌍`;
-      }
-
-      const totalSaved = trips?.reduce((sum, t) => sum + (t.saved_amount || 0), 0) || 0;
-
-      // Check if user asked for a specific category
-      const categoryKeywords = ['beach', 'mountain', 'city', 'adventure', 'cultural', 'event'];
-      const requestedCategory = categoryKeywords.find(cat => lowerMessage.includes(cat));
-
-      let filteredDests = availableDestinations;
-      if (requestedCategory) {
-        filteredDests = availableDestinations.filter(d =>
-          (d.categories || []).some(c => c.toLowerCase().includes(requestedCategory))
-        );
-        if (filteredDests.length === 0) {
-          return `I don't have any **${requestedCategory}** destinations at the moment, but here are all our available destinations:\n\n${formatDestinationsList(availableDestinations)}\n\nWould you like details about any of these? 🌟`;
-        }
-      }
-
-      // Budget-aware recommendations
-      if (totalSaved > 0) {
-        const withinBudget = filteredDests.filter(d => Number(d.estimated_cost) <= totalSaved);
-        const stretch = filteredDests.filter(d => Number(d.estimated_cost) > totalSaved && Number(d.estimated_cost) <= totalSaved * 1.5);
-
-        let response = `Based on your current savings of KES ${totalSaved.toLocaleString()}, here are some destinations! 🌴\n`;
-
-        if (withinBudget.length > 0) {
-          response += `\n**Within Your Budget:**\n${formatDestinationsList(withinBudget)}`;
-        }
-        if (stretch.length > 0) {
-          response += `\n\n**Stretch Goals (save a bit more!):**\n${formatDestinationsList(stretch, 3)}`;
-        }
-        if (withinBudget.length === 0 && stretch.length === 0) {
-          response += `\nKeep saving! Here are some goals to work towards:\n${formatDestinationsList(filteredDests)}`;
-        }
-        response += `\n\nWould you like a savings plan for any of these?`;
-        return response;
-      }
-
-      return `Here are our available destinations! 🗺️\n\n${formatDestinationsList(filteredDests)}\n\nTell me your budget and I can give personalized recommendations!`;
-    }
-
-    // --- BOOKING / PAYMENT: No Paystack mention ---
-    if (lowerMessage.includes('package') || lowerMessage.includes('booking') || lowerMessage.includes('payment') || lowerMessage.includes('pay') || lowerMessage.includes('book')) {
-      return `Great question about our booking options! ✈️
-
-**How Booking Works:**
-1. Browse destinations and packages
-2. Choose your preferred package
-3. Complete payment using the supported payment methods on the platform
-
-**Payment Options:**
-• Card payment (Visa, Mastercard)
-• Bank transfer
-• Mobile money (M-Pesa)
-
-**What's Included in Packages:**
-• Accommodation
-• Airport transfers
-• Selected activities
-• Travel insurance (optional)
-
-What destination are you interested in booking?`;
-    }
-
-    // --- HOW IT WORKS ---
-    if (lowerMessage.includes('smart saving') || lowerMessage.includes('how does') || lowerMessage.includes('work')) {
-      return `Here's how TembeaSave works! 🎯
-
-**1. Set Your Goal**
-Choose a destination and set a target amount and date.
-
-**2. Save Regularly**
-Add funds to your savings goal using the supported payment methods. We'll track your progress!
-
-**3. Get Reminders**
-We'll remind you about savings and celebrate your milestones! 🎉
-
-**4. Book Your Trip**
-Once you've saved enough, book directly through our platform.
-
-**5. Travel!**
-Enjoy your well-earned vacation! ✈️
-
-Would you like to create a savings goal now?`;
-    }
-
-    // --- MISSED PAYMENTS ---
-    if (lowerMessage.includes('miss') && lowerMessage.includes('payment')) {
-      return `No worries! Missing a savings deposit happens. 💪
-
-**What Happens:**
-• Your goal timeline extends slightly
-• No penalties or fees
-• You can catch up anytime
-
-**Tips to Stay on Track:**
-• Set up regular deposit reminders
-• Save smaller amounts more frequently
-• Enable savings reminders in your profile
-
-Remember, any progress is good progress! Would you like me to help you adjust your savings plan?`;
-    }
-
-    // --- DEFAULT ---
-    return `I'm here to help you with your travel savings journey! 🌟
-
-I can assist with:
-• 💰 Calculating savings plans for your dream trips
-• 🏝️ Recommending destinations based on your budget
-• ✈️ Explaining booking and payment options
-• ❓ Answering questions about how TembeaSave works
-
-What would you like to know more about?`;
-  }, [destinations, trips]);
 
   // ============================================================================
   // Render

@@ -332,6 +332,13 @@ export type Database = {
                     is_trending: boolean | null
                     is_seasonal: boolean | null
                     engagement_score: number | null
+                    status: 'draft' | 'published' | 'archived' | null
+                    destination_id: string | null
+                    start_date: string | null
+                    end_date: string | null
+                    start_time: string | null
+                    end_time: string | null
+                    max_participants: number | null
                     created_at: string | null
                     updated_at: string | null
                 }
@@ -348,6 +355,13 @@ export type Database = {
                     is_trending?: boolean | null
                     is_seasonal?: boolean | null
                     engagement_score?: number | null
+                    status?: 'draft' | 'published' | 'archived' | null
+                    destination_id?: string | null
+                    start_date?: string | null
+                    end_date?: string | null
+                    start_time?: string | null
+                    end_time?: string | null
+                    max_participants?: number | null
                     created_at?: string | null
                     updated_at?: string | null
                 }
@@ -364,6 +378,13 @@ export type Database = {
                     is_trending?: boolean | null
                     is_seasonal?: boolean | null
                     engagement_score?: number | null
+                    status?: 'draft' | 'published' | 'archived' | null
+                    destination_id?: string | null
+                    start_date?: string | null
+                    end_date?: string | null
+                    start_time?: string | null
+                    end_time?: string | null
+                    max_participants?: number | null
                     created_at?: string | null
                     updated_at?: string | null
                 }

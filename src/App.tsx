@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { useState, useEffect, useRef, Suspense, lazy } from "react";
+import { useEffect, useRef, Suspense, lazy } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute, { AdminRoute } from "@/components/ProtectedRoute";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -133,18 +133,29 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
 };
 
 const App = () => {
-  // Always use dark theme - no toggle needed
-  const [isDark] = useState(true);
+  // Always use dark theme
+  const isDark = true;
 
   useEffect(() => {
     // Force dark mode on mount
     document.documentElement.classList.add("dark");
     localStorage.setItem("theme", "dark");
+    
+    // Safely remove initial loader after React has mounted and painted
+    const loader = document.getElementById('initial-loader');
+    if (loader) {
+      // Use requestAnimationFrame to ensure the first render has painted
+      requestAnimationFrame(() => {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.remove();
+        }, 300); // Wait for fade out transition (if any) before removing from DOM
+      });
+    }
   }, []);
 
   // Theme toggle is kept for potential future use but always returns dark
   const toggleTheme = () => {
-    // Dark theme is enforced - no toggle
     document.documentElement.classList.add("dark");
   };
 

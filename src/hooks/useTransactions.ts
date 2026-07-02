@@ -96,26 +96,19 @@ export function useTransactionStats() {
             const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
             const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString();
 
-            // Get this month's transactions
-            const { data: thisMonthData, error: thisMonthError } = await supabase
+            // Get all transactions from the start of last month
+            const { data: allStatsData, error: statsError } = await supabase
                 .from('transactions')
-                .select('amount, type')
+                .select('amount, type, created_at')
                 .eq('user_id', user.id)
                 .eq('status', 'completed')
-                .gte('created_at', firstDayOfMonth);
+                .gte('created_at', firstDayOfLastMonth);
 
-            if (thisMonthError) throw thisMonthError;
+            if (statsError) throw statsError;
 
-            // Get last month's transactions
-            const { data: lastMonthData, error: lastMonthError } = await supabase
-                .from('transactions')
-                .select('amount, type')
-                .eq('user_id', user.id)
-                .eq('status', 'completed')
-                .gte('created_at', firstDayOfLastMonth)
-                .lte('created_at', lastDayOfLastMonth);
-
-            if (lastMonthError) throw lastMonthError;
+            // Split into this month and last month client-side
+            const thisMonthData = allStatsData?.filter(t => t.created_at >= firstDayOfMonth);
+            const lastMonthData = allStatsData?.filter(t => t.created_at >= firstDayOfLastMonth && t.created_at <= lastDayOfLastMonth);
 
             const calculateNetSavings = (transactions: typeof thisMonthData) => {
                 return transactions?.reduce((sum, t) => {

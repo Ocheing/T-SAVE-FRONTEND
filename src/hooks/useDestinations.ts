@@ -26,13 +26,8 @@ let globalQueryClient: import('@tanstack/react-query').QueryClient | null = null
  */
 export function useDestinationsRealtime() {
     const queryClient = useQueryClient();
-    const mountedRef = useRef(false);
 
     useEffect(() => {
-        // Prevent double-registration in React Strict Mode
-        if (mountedRef.current) return;
-        mountedRef.current = true;
-
         // Always keep queryClient reference up to date
         globalQueryClient = queryClient;
         realtimeSubscriberCount++;
@@ -64,7 +59,6 @@ export function useDestinationsRealtime() {
         }
 
         return () => {
-            mountedRef.current = false;
             realtimeSubscriberCount = Math.max(0, realtimeSubscriberCount - 1);
 
             if (realtimeSubscriberCount === 0 && globalChannel) {
@@ -95,9 +89,10 @@ export function useDestinations() {
             if (error) throw error;
             return data as Destination[];
         },
-        staleTime: 1000 * 60, // 1 minute
+        staleTime: 1000 * 30, // 30 seconds
         gcTime: 1000 * 60 * 5, // 5 minutes cache
-        refetchOnWindowFocus: false, // Realtime handles updates
+        refetchOnWindowFocus: true,
+        refetchOnMount: 'always',
     });
 }
 
@@ -119,9 +114,10 @@ export function usePublishedDestinations() {
             if (error) throw error;
             return data as Destination[];
         },
-        staleTime: 1000 * 60,
+        staleTime: 1000 * 30, // 30 seconds
         gcTime: 1000 * 60 * 5,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
+        refetchOnMount: 'always',
     });
 }
 
@@ -144,9 +140,10 @@ export function useFeaturedDestinations() {
             if (error) throw error;
             return data as Destination[];
         },
-        staleTime: 1000 * 60,
+        staleTime: 1000 * 30, // 30 seconds
         gcTime: 1000 * 60 * 5,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
+        refetchOnMount: 'always',
     });
 }
 
@@ -169,9 +166,10 @@ export function usePopularDestinations() {
             if (error) throw error;
             return data as Destination[];
         },
-        staleTime: 1000 * 60,
+        staleTime: 1000 * 30, // 30 seconds
         gcTime: 1000 * 60 * 5,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
+        refetchOnMount: 'always',
     });
 }
 
@@ -195,9 +193,10 @@ export function useDashboardDestinations(limit = 6) {
             if (error) throw error;
             return data as Pick<Destination, 'id' | 'name' | 'image_url' | 'estimated_cost' | 'categories' | 'location'>[];
         },
-        staleTime: 1000 * 60 * 5, // 5 minutes — destinations rarely change mid-session
+        staleTime: 1000 * 30, // 30 seconds
         gcTime: 1000 * 60 * 30,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
+        refetchOnMount: 'always',
     });
 }
 
@@ -214,6 +213,7 @@ export function useDestinationMutations() {
             queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.featured }),
             queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.popular }),
             queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.published }),
+            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.dashboard }),
         ]);
     }, [queryClient]);
 

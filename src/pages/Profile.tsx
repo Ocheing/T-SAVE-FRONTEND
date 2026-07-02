@@ -30,54 +30,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { validateKenyanPhone, KENYAN_BANKS } from "@/lib/paymentService";
 import ReviewDialog, { shouldPromptForReview } from "@/components/ReviewDialog";
+import { CURRENCIES } from "@/contexts/CurrencyContext";
+import { LANGUAGES } from "@/contexts/LanguageContext";
 
-// Comprehensive list of world currencies
-const CURRENCIES = [
-  { code: "KES", name: "Kenyan Shilling", symbol: "KSh", flag: "🇰🇪" },
-  { code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸" },
-  { code: "EUR", name: "Euro", symbol: "€", flag: "🇪🇺" },
-  { code: "GBP", name: "British Pound", symbol: "£", flag: "🇬🇧" },
-  { code: "JPY", name: "Japanese Yen", symbol: "¥", flag: "🇯🇵" },
-  { code: "AUD", name: "Australian Dollar", symbol: "A$", flag: "🇦🇺" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "C$", flag: "🇨🇦" },
-  { code: "CHF", name: "Swiss Franc", symbol: "CHF", flag: "🇨🇭" },
-  { code: "CNY", name: "Chinese Yuan", symbol: "¥", flag: "🇨🇳" },
-  { code: "INR", name: "Indian Rupee", symbol: "₹", flag: "🇮🇳" },
-  { code: "ZAR", name: "South African Rand", symbol: "R", flag: "🇿🇦" },
-  { code: "AED", name: "UAE Dirham", symbol: "د.إ", flag: "🇦🇪" },
-  { code: "NGN", name: "Nigerian Naira", symbol: "₦", flag: "🇳🇬" },
-  { code: "TZS", name: "Tanzanian Shilling", symbol: "TSh", flag: "🇹🇿" },
-  { code: "UGX", name: "Ugandan Shilling", symbol: "USh", flag: "🇺🇬" },
-  { code: "RWF", name: "Rwandan Franc", symbol: "FRw", flag: "🇷🇼" },
-  { code: "ETB", name: "Ethiopian Birr", symbol: "Br", flag: "🇪🇹" },
-  { code: "BRL", name: "Brazilian Real", symbol: "R$", flag: "🇧🇷" },
-  { code: "MXN", name: "Mexican Peso", symbol: "Mex$", flag: "🇲🇽" },
-  { code: "KRW", name: "South Korean Won", symbol: "₩", flag: "🇰🇷" },
-  { code: "SGD", name: "Singapore Dollar", symbol: "S$", flag: "🇸🇬" },
-  { code: "THB", name: "Thai Baht", symbol: "฿", flag: "🇹🇭" },
-  { code: "MYR", name: "Malaysian Ringgit", symbol: "RM", flag: "🇲🇾" },
-  { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp", flag: "🇮🇩" },
-  { code: "PHP", name: "Philippine Peso", symbol: "₱", flag: "🇵🇭" },
-];
-
-// Comprehensive list of world languages
-const LANGUAGES = [
-  { code: "en", name: "English", native: "English", flag: "🇬🇧" },
-  { code: "sw", name: "Swahili", native: "Kiswahili", flag: "🇰🇪" },
-  { code: "fr", name: "French", native: "Français", flag: "🇫🇷" },
-  { code: "es", name: "Spanish", native: "Español", flag: "🇪🇸" },
-  { code: "de", name: "German", native: "Deutsch", flag: "🇩🇪" },
-  { code: "it", name: "Italian", native: "Italiano", flag: "🇮🇹" },
-  { code: "pt", name: "Portuguese", native: "Português", flag: "🇵🇹" },
-  { code: "zh", name: "Chinese", native: "中文", flag: "🇨🇳" },
-  { code: "ja", name: "Japanese", native: "日本語", flag: "🇯🇵" },
-  { code: "ko", name: "Korean", native: "한국어", flag: "🇰🇷" },
-  { code: "ar", name: "Arabic", native: "العربية", flag: "🇸🇦" },
-  { code: "hi", name: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
-  { code: "am", name: "Amharic", native: "አማርኛ", flag: "🇪🇹" },
-  { code: "ha", name: "Hausa", native: "Hausa", flag: "🇳🇬" },
-  { code: "zu", name: "Zulu", native: "isiZulu", flag: "🇿🇦" },
-];
+// Removed local CURRENCIES and LANGUAGES, now imported from context
 
 // Payment method type icons
 const PAYMENT_ICONS = {

@@ -20,6 +20,8 @@ import {
     TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
+import { DESTINATIONS_QUERY_KEYS } from "@/hooks/useDestinations";
 import {
     Table,
     TableBody,
@@ -223,12 +225,23 @@ const DestinationRow = memo(({
 DestinationRow.displayName = 'DestinationRow';
 
 export default function DestinationsManagement() {
+    const queryClient = useQueryClient();
     const [destinations, setDestinations] = useState<Destination[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
     const [featureFilter, setFeatureFilter] = useState<FeatureFilter>('all');
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const invalidateQueryCache = useCallback(() => {
+        return Promise.all([
+            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.all }),
+            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.featured }),
+            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.popular }),
+            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.published }),
+            queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.dashboard }),
+        ]);
+    }, [queryClient]);
 
     // Modal states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -351,8 +364,9 @@ export default function DestinationsManagement() {
             if (prevDestination) optimisticUpdate(id, { status: prevDestination.status });
         } else {
             toast.success(`Destination ${newStatus} successfully`);
+            invalidateQueryCache();
         }
-    }, [destinations, optimisticUpdate]);
+    }, [destinations, optimisticUpdate, invalidateQueryCache]);
 
     const handleToggleFeatured = useCallback(async (destination: Destination) => {
         const newValue = !destination.is_featured;
@@ -368,8 +382,9 @@ export default function DestinationsManagement() {
             optimisticUpdate(destination.id, { is_featured: destination.is_featured });
         } else {
             toast.success(newValue ? "Marked as featured" : "Removed from featured");
+            invalidateQueryCache();
         }
-    }, [optimisticUpdate]);
+    }, [optimisticUpdate, invalidateQueryCache]);
 
     const handleTogglePopular = useCallback(async (destination: Destination) => {
         const newValue = !destination.is_popular;
@@ -385,8 +400,9 @@ export default function DestinationsManagement() {
             optimisticUpdate(destination.id, { is_popular: destination.is_popular });
         } else {
             toast.success(newValue ? "Marked as popular" : "Removed from popular");
+            invalidateQueryCache();
         }
-    }, [optimisticUpdate]);
+    }, [optimisticUpdate, invalidateQueryCache]);
 
     const handleViewClick = useCallback((destination: Destination) => {
         setSelectedDestination(destination);
@@ -423,12 +439,13 @@ export default function DestinationsManagement() {
             setDestinations(prev => [deletedDestination, ...prev]);
         } else {
             toast.success("Destination deleted successfully");
+            invalidateQueryCache();
         }
 
         setIsDeleting(false);
         setDeleteDialogOpen(false);
         setDestinationToDelete(null);
-    }, [destinationToDelete]);
+    }, [destinationToDelete, invalidateQueryCache]);
 
     const handleEditFromView = useCallback(() => {
         setIsViewModalOpen(false);
@@ -441,12 +458,14 @@ export default function DestinationsManagement() {
     const handleCreateSuccess = useCallback(() => {
         // Don't refetch - realtime subscription handles the update
         console.log('[Create] Success - realtime will update the list');
-    }, []);
+        invalidateQueryCache();
+    }, [invalidateQueryCache]);
 
     const handleEditSuccess = useCallback(() => {
         // Don't refetch - realtime subscription handles the update
         console.log('[Edit] Success - realtime will update the list');
-    }, []);
+        invalidateQueryCache();
+    }, [invalidateQueryCache]);
 
     // Memoized filtered destinations
     const filtered = useMemo(() => {

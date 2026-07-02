@@ -9,7 +9,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTrips } from "@/hooks/useTrips";
 import { useWishlist } from "@/hooks/useWishlist";
+import { usePublishedDestinations } from "@/hooks/useDestinations";
 import { useToast } from "@/hooks/use-toast";
+import type { Destination } from "@/types/database.types";
 
 interface Message {
   id: string;
@@ -19,27 +21,30 @@ interface Message {
 }
 
 // ============================================================================
-// System Prompt
+// System Prompt — gateway-agnostic, dynamic-data-aware
 // ============================================================================
 const SYSTEM_PROMPT = `You are TembeaSave AI, a friendly and knowledgeable travel savings assistant for a Kenyan travel savings platform. You help users with:
 
 1. SAVING GUIDANCE:
-- Calculate weekly/monthly savings needed to reach trip goals
-- Suggest realistic timelines for savings goals
-- Provide budgeting tips for travelers
-- Help users understand if their savings goals are achievable
+- When a user asks about saving for a trip, FIRST ask which destination or trip they want to save for (e.g. "Which trip or destination would you like to save for?")
+- Once they specify a destination, look it up in the AVAILABLE DESTINATIONS data provided below
+- If found, calculate and present: estimated total trip cost, suggested monthly savings plan, weekly savings plan, daily savings estimate, approximate time to reach the goal, and practical budgeting tips
+- If not found, politely inform the user and suggest similar available destinations from the list
 - All amounts should be in KES (Kenyan Shillings)
+- Always base savings calculations on real destination prices from the data — never use made-up prices
 
 2. DESTINATION RECOMMENDATIONS:
-- Suggest destinations based on budget (in KES)
-- Recommend places based on saved amount
-- Provide alternatives within budget constraints
-- Share travel tips for popular destinations
+- When a user asks about destinations, ALWAYS refer to the AVAILABLE DESTINATIONS data provided below
+- Do NOT make up destination names or prices — only recommend destinations that exist in the data
+- If the user asks about a specific type (beach, adventure, etc.), filter by the categories in the data
+- Suggest destinations based on budget (in KES), category preferences, or location
+- Share the actual prices from the data
 
 3. BOOKING HELP:
 - Explain travel packages and what's included
 - Suggest cheaper alternatives (off-season travel, nearby airports, etc.)
-- Explain payment options via Paystack (card, bank, mobile money)
+- Explain that payments can be completed using the payment methods supported by the platform (card, bank transfer, or mobile money)
+- Do NOT mention any specific payment gateway or provider by name
 - Help users understand booking policies
 
 4. GENERAL SUPPORT:
@@ -58,8 +63,8 @@ IMPORTANT: Never include HTML tags, script tags, or any code in your responses. 
 // Quick Prompts
 // ============================================================================
 const QUICK_PROMPTS = [
-  { icon: faDollarSign, label: "Saving Tips", prompt: "How much should I save weekly for a trip to Diani Beach?" },
-  { icon: faLocationDot, label: "Destinations", prompt: "Recommend destinations I can visit with my current savings" },
+  { icon: faDollarSign, label: "Saving Tips", prompt: "I'd like help saving for a trip" },
+  { icon: faLocationDot, label: "Destinations", prompt: "What destinations are available?" },
   { icon: faPlane, label: "Booking", prompt: "Explain how the booking and payment options work" },
   { icon: faCircleQuestion, label: "How it works", prompt: "How does smart saving work on TembeaSave?" },
 ];
@@ -124,13 +129,98 @@ function saveMessages(messages: Message[]) {
 }
 
 // ============================================================================
+// Destination lookup helpers (from live data)
+// ============================================================================
+function findDestination(query: string, destinations: Destination[]): Destination | null {
+  if (!destinations || destinations.length === 0) return null;
+  const q = query.toLowerCase().trim();
+
+  // Exact name match first
+  const exact = destinations.find(d => d.name.toLowerCase() === q);
+  if (exact) return exact;
+
+  // Partial match
+  const partial = destinations.find(d =>
+    d.name.toLowerCase().includes(q) ||
+    d.location?.toLowerCase().includes(q)
+  );
+  return partial || null;
+}
+
+function findSimilarDestinations(query: string, destinations: Destination[], limit = 3): Destination[] {
+  if (!destinations || destinations.length === 0) return [];
+  const q = query.toLowerCase().trim();
+
+  // Try to find destinations in the same category or location
+  const queryWords = q.split(/\s+/);
+  return destinations
+    .filter(d => {
+      const name = d.name.toLowerCase();
+      const loc = (d.location || '').toLowerCase();
+      const cats = (d.categories || []).map(c => c.toLowerCase());
+      return queryWords.some(w =>
+        name.includes(w) || loc.includes(w) || cats.some(c => c.includes(w))
+      );
+    })
+    .slice(0, limit);
+}
+
+function formatDestinationsList(destinations: Destination[], limit = 5): string {
+  if (!destinations || destinations.length === 0) return "No destinations available at the moment.";
+
+  return destinations.slice(0, limit).map(d => {
+    const cost = Number(d.estimated_cost).toLocaleString();
+    const cats = (d.categories || []).slice(0, 2).join(', ');
+    const location = d.location || 'Kenya';
+    return `• **${d.name}** — ${location} — KES ${cost}${cats ? ` (${cats})` : ''}`;
+  }).join('\n');
+}
+
+function generateSavingsPlan(destination: Destination): string {
+  const cost = Number(destination.estimated_cost);
+  const monthly3 = Math.ceil(cost / 3);
+  const monthly6 = Math.ceil(cost / 6);
+  const weekly3 = Math.ceil(cost / 12);
+  const weekly6 = Math.ceil(cost / 24);
+  const daily3 = Math.ceil(cost / 90);
+  const daily6 = Math.ceil(cost / 180);
+
+  return `Great choice! Here's a personalized savings plan for **${destination.name}** 🎯
+
+**Estimated Trip Cost:** KES ${cost.toLocaleString()}
+📍 ${destination.location || 'Kenya'}
+
+**3-Month Plan (Aggressive):**
+• Monthly: KES ${monthly3.toLocaleString()}
+• Weekly: KES ${weekly3.toLocaleString()}
+• Daily: KES ${daily3.toLocaleString()}
+
+**6-Month Plan (Comfortable):**
+• Monthly: KES ${monthly6.toLocaleString()}
+• Weekly: KES ${weekly6.toLocaleString()}
+• Daily: KES ${daily6.toLocaleString()}
+
+**💡 Budgeting Tips:**
+• Set up automatic transfers on payday
+• Use the "round-up" method — round daily expenses up and save the difference
+• Cut one non-essential expense per week and redirect it to your travel fund
+• Track your progress on the dashboard to stay motivated!
+
+Would you like to create a savings goal for this trip? 🌟`;
+}
+
+// ============================================================================
 // Component
 // ============================================================================
 const ChatAssistant = () => {
   const { profile } = useAuth();
   const { data: trips } = useTrips();
   const { data: wishlist } = useWishlist();
+  const { data: destinations } = usePublishedDestinations();
   const { toast } = useToast();
+
+  // Track conversational state for savings flow
+  const [awaitingSavingsDestination, setAwaitingSavingsDestination] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>(() => {
     const stored = loadMessages();
@@ -198,10 +288,19 @@ What would you like help with today?`,
       context += `\n- Wishlist destinations: ${wishlist.map(w => w.destination).join(', ')}`;
     }
 
+    // Include available destinations from the database
+    if (destinations && destinations.length > 0) {
+      context += `\n\nAVAILABLE DESTINATIONS (from the platform database — use these for recommendations and pricing):`;
+      destinations.forEach(d => {
+        const cats = (d.categories || []).join(', ');
+        context += `\n  • ${d.name} | Location: ${d.location || 'Kenya'} | Cost: KES ${Number(d.estimated_cost).toLocaleString()} | Categories: ${cats || 'general'}`;
+      });
+    }
+
     context += `\n- Currency: KES (Kenyan Shillings)`;
 
     return context;
-  }, [trips, wishlist]);
+  }, [trips, wishlist, destinations]);
 
   // ============================================================================
   // Send message
@@ -245,6 +344,42 @@ What would you like help with today?`,
     setIsLoading(true);
 
     try {
+      // Check if we're in the savings conversational flow (awaiting destination name)
+      if (awaitingSavingsDestination) {
+        setAwaitingSavingsDestination(false);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const found = findDestination(userMessage, destinations || []);
+        if (found) {
+          const response = generateSavingsPlan(found);
+          setMessages(prev => [...prev, {
+            id: generateId(),
+            role: "assistant",
+            content: response,
+            timestamp: Date.now(),
+          }]);
+          return;
+        } else {
+          // Not found — suggest similar
+          const similar = findSimilarDestinations(userMessage, destinations || []);
+          let response = `I couldn't find a destination matching "${userMessage}" in our current offerings. 😕`;
+          if (similar.length > 0) {
+            response += `\n\nHere are some similar destinations you might like:\n${formatDestinationsList(similar)}`;
+            response += `\n\nWould you like a savings plan for any of these?`;
+          } else if (destinations && destinations.length > 0) {
+            response += `\n\nHere are our available destinations:\n${formatDestinationsList(destinations)}`;
+            response += `\n\nTell me which one interests you and I'll create a savings plan! 😊`;
+          }
+          setMessages(prev => [...prev, {
+            id: generateId(),
+            role: "assistant",
+            content: response,
+            timestamp: Date.now(),
+          }]);
+          return;
+        }
+      }
+
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
       if (!apiKey || apiKey === '...00zI' || apiKey.includes('your_')) {
@@ -376,7 +511,7 @@ What would you like help with today?`,
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, isLoading, lastSentAt, messages, buildUserContext, toast]);
+  }, [input, isLoading, lastSentAt, messages, buildUserContext, toast, awaitingSavingsDestination, destinations, generateFallbackResponse]);
 
   // ============================================================================
   // Clear chat
@@ -394,26 +529,39 @@ What would you like help with today?`,
       timestamp: Date.now(),
     }]);
     setError(null);
+    setAwaitingSavingsDestination(false);
     sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
   // ============================================================================
   // Fallback responses (when Gemini API is unavailable)
+  // Uses LIVE destination data from the database
   // ============================================================================
-  const generateFallbackResponse = (message: string): string => {
+  const generateFallbackResponse = useCallback((message: string): string => {
     const lowerMessage = message.toLowerCase();
+    const availableDestinations = destinations || [];
 
-    if (lowerMessage.includes('save') && lowerMessage.includes('week')) {
-      const destination = extractDestination(message);
-      const estimatedCost = getEstimatedCost(destination);
-      const weeklyAmount = Math.ceil(estimatedCost / 12);
-      return `Great question! 💰 For a trip to ${destination || 'your destination'}, I'd estimate a budget of around KES ${estimatedCost.toLocaleString()}. 
+    // --- SAVING TIPS: Ask which destination first ---
+    if (lowerMessage.includes('save') || lowerMessage.includes('saving') || lowerMessage.includes('budget')) {
+      // Check if user mentioned a specific destination
+      const mentionedDest = findDestination(message, availableDestinations);
 
-To reach this goal in 3 months (12 weeks), you'd need to save approximately **KES ${weeklyAmount.toLocaleString()}/week**.
+      if (mentionedDest) {
+        return generateSavingsPlan(mentionedDest);
+      }
 
-Want me to help you create a savings goal for this trip?`;
+      // No specific destination mentioned — ask which one
+      setAwaitingSavingsDestination(true);
+
+      let response = `I'd love to help you create a savings plan! 💰\n\n**Which trip or destination would you like to save for?**`;
+      if (availableDestinations.length > 0) {
+        response += `\n\nHere are some of our available destinations:\n${formatDestinationsList(availableDestinations, 5)}`;
+        response += `\n\nJust tell me the name of the destination and I'll calculate a personalized savings plan for you! 😊`;
+      }
+      return response;
     }
 
+    // --- CAN I REACH MY GOAL? ---
     if (lowerMessage.includes('reach') && lowerMessage.includes('month')) {
       return `Let me help you calculate! 📊 
 
@@ -426,45 +574,61 @@ As a general rule, if you can set aside 20-30% of your income for travel savings
 What's your target destination and budget?`;
     }
 
-    if (lowerMessage.includes('recommend') || lowerMessage.includes('destination') || lowerMessage.includes('suggest')) {
-      const totalSaved = trips?.reduce((sum, t) => sum + (t.saved_amount || 0), 0) || 0;
-      if (totalSaved > 300000) {
-        return `Based on your current savings of KES ${totalSaved.toLocaleString()}, here are some amazing destinations you could consider! 🌴
-
-**Within Budget:**
-• Zanzibar, Tanzania - ~KES 250,000 (7 days)
-• Mombasa, Kenya - ~KES 150,000 (5 days)
-• Cape Town, South Africa - ~KES 300,000 (7 days)
-
-**Stretch Goals:**
-• Maldives - ~KES 450,000 (5 days)
-• Dubai - ~KES 400,000 (5 days)
-
-Would you like more details about any of these?`;
+    // --- DESTINATION RECOMMENDATIONS: Always use live data ---
+    if (lowerMessage.includes('recommend') || lowerMessage.includes('destination') || lowerMessage.includes('suggest') || lowerMessage.includes('where') || lowerMessage.includes('beach') || lowerMessage.includes('adventure') || lowerMessage.includes('available')) {
+      if (availableDestinations.length === 0) {
+        return `We're currently updating our destination catalog. Please check back soon or visit the Destinations page for the latest offerings! 🌍`;
       }
-      return `I'd love to recommend some destinations! 🗺️
 
-**Budget-Friendly Options (Under KES 200,000):**
-• Diani Beach, Kenya - ~KES 120,000
-• Naivasha Getaway - ~KES 80,000
-• Mombasa - ~KES 150,000
+      const totalSaved = trips?.reduce((sum, t) => sum + (t.saved_amount || 0), 0) || 0;
 
-**Mid-Range (KES 200,000-400,000):**
-• Zanzibar - ~KES 250,000
-• Rwanda Gorilla Trek - ~KES 350,000
+      // Check if user asked for a specific category
+      const categoryKeywords = ['beach', 'mountain', 'city', 'adventure', 'cultural', 'event'];
+      const requestedCategory = categoryKeywords.find(cat => lowerMessage.includes(cat));
 
-Tell me your budget and I can give personalized recommendations!`;
+      let filteredDests = availableDestinations;
+      if (requestedCategory) {
+        filteredDests = availableDestinations.filter(d =>
+          (d.categories || []).some(c => c.toLowerCase().includes(requestedCategory))
+        );
+        if (filteredDests.length === 0) {
+          return `I don't have any **${requestedCategory}** destinations at the moment, but here are all our available destinations:\n\n${formatDestinationsList(availableDestinations)}\n\nWould you like details about any of these? 🌟`;
+        }
+      }
+
+      // Budget-aware recommendations
+      if (totalSaved > 0) {
+        const withinBudget = filteredDests.filter(d => Number(d.estimated_cost) <= totalSaved);
+        const stretch = filteredDests.filter(d => Number(d.estimated_cost) > totalSaved && Number(d.estimated_cost) <= totalSaved * 1.5);
+
+        let response = `Based on your current savings of KES ${totalSaved.toLocaleString()}, here are some destinations! 🌴\n`;
+
+        if (withinBudget.length > 0) {
+          response += `\n**Within Your Budget:**\n${formatDestinationsList(withinBudget)}`;
+        }
+        if (stretch.length > 0) {
+          response += `\n\n**Stretch Goals (save a bit more!):**\n${formatDestinationsList(stretch, 3)}`;
+        }
+        if (withinBudget.length === 0 && stretch.length === 0) {
+          response += `\nKeep saving! Here are some goals to work towards:\n${formatDestinationsList(filteredDests)}`;
+        }
+        response += `\n\nWould you like a savings plan for any of these?`;
+        return response;
+      }
+
+      return `Here are our available destinations! 🗺️\n\n${formatDestinationsList(filteredDests)}\n\nTell me your budget and I can give personalized recommendations!`;
     }
 
-    if (lowerMessage.includes('package') || lowerMessage.includes('booking') || lowerMessage.includes('payment')) {
+    // --- BOOKING / PAYMENT: No Paystack mention ---
+    if (lowerMessage.includes('package') || lowerMessage.includes('booking') || lowerMessage.includes('payment') || lowerMessage.includes('pay') || lowerMessage.includes('book')) {
       return `Great question about our booking options! ✈️
 
 **How Booking Works:**
 1. Browse destinations and packages
 2. Choose your preferred package
-3. Pay using Paystack (card, bank transfer, or mobile money)
+3. Complete payment using the supported payment methods on the platform
 
-**Payment Options (via Paystack):**
+**Payment Options:**
 • Card payment (Visa, Mastercard)
 • Bank transfer
 • Mobile money (M-Pesa)
@@ -478,6 +642,7 @@ Tell me your budget and I can give personalized recommendations!`;
 What destination are you interested in booking?`;
     }
 
+    // --- HOW IT WORKS ---
     if (lowerMessage.includes('smart saving') || lowerMessage.includes('how does') || lowerMessage.includes('work')) {
       return `Here's how TembeaSave works! 🎯
 
@@ -485,7 +650,7 @@ What destination are you interested in booking?`;
 Choose a destination and set a target amount and date.
 
 **2. Save Regularly**
-Add funds to your goal via Paystack. We'll track your progress!
+Add funds to your savings goal using the supported payment methods. We'll track your progress!
 
 **3. Get Reminders**
 We'll remind you about savings and celebrate your milestones! 🎉
@@ -499,6 +664,7 @@ Enjoy your well-earned vacation! ✈️
 Would you like to create a savings goal now?`;
     }
 
+    // --- MISSED PAYMENTS ---
     if (lowerMessage.includes('miss') && lowerMessage.includes('payment')) {
       return `No worries! Missing a savings deposit happens. 💪
 
@@ -515,44 +681,17 @@ Would you like to create a savings goal now?`;
 Remember, any progress is good progress! Would you like me to help you adjust your savings plan?`;
     }
 
+    // --- DEFAULT ---
     return `I'm here to help you with your travel savings journey! 🌟
 
 I can assist with:
-• 💰 Calculating weekly savings for your goals
+• 💰 Calculating savings plans for your dream trips
 • 🏝️ Recommending destinations based on your budget
 • ✈️ Explaining booking and payment options
 • ❓ Answering questions about how TembeaSave works
 
 What would you like to know more about?`;
-  };
-
-  const extractDestination = (message: string): string | null => {
-    const destinations = ['diani', 'mombasa', 'zanzibar', 'dubai', 'maldives', 'bali', 'paris', 'london', 'nairobi', 'cape town', 'maasai mara', 'nakuru', 'lamu'];
-    for (const dest of destinations) {
-      if (message.toLowerCase().includes(dest)) {
-        return dest.charAt(0).toUpperCase() + dest.slice(1);
-      }
-    }
-    return null;
-  };
-
-  const getEstimatedCost = (destination: string | null): number => {
-    const costs: Record<string, number> = {
-      'Diani': 120000,
-      'Mombasa': 150000,
-      'Zanzibar': 250000,
-      'Dubai': 400000,
-      'Maldives': 500000,
-      'Bali': 350000,
-      'Paris': 450000,
-      'London': 500000,
-      'Cape town': 300000,
-      'Maasai mara': 100000,
-      'Nakuru': 60000,
-      'Lamu': 80000,
-    };
-    return destination ? costs[destination] || 200000 : 200000;
-  };
+  }, [destinations, trips]);
 
   // ============================================================================
   // Render
@@ -667,7 +806,7 @@ What would you like to know more about?`;
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
-                placeholder="Ask me anything about travel savings..."
+                placeholder={awaitingSavingsDestination ? "Type the destination name..." : "Ask me anything about travel savings..."}
                 value={input}
                 onChange={(e) => setInput(e.target.value.slice(0, MAX_INPUT_LENGTH))}
                 onKeyDown={(e) => {

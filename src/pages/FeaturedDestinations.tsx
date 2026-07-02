@@ -51,6 +51,8 @@ const FeaturedDestinations = () => {
                     src={dest.image_url || heroBeach}
                     alt={dest.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute top-3 right-3 flex gap-2">
                     <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full">

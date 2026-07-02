@@ -2,8 +2,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDollarSign, faArrowTrendUp, faBullseye, faCalendar, faCommentDots,
   faPlus, faReceipt, faPlane, faCalendarDays, faCompass, faArrowRight,
-  faStar, faLocationDot, faSpinner
+  faStar, faLocationDot, faTriangleExclamation
 } from "@fortawesome/free-solid-svg-icons";
+import { useMemo } from "react";
 import StatCard from "@/components/StatCard";
 import TripCard from "@/components/TripCard";
 import { Card } from "@/components/ui/card";
@@ -17,14 +18,34 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTrips, useTripStats } from "@/hooks/useTrips";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTransactionStats } from "@/hooks/useTransactions";
-import { usePublishedDestinations } from "@/hooks/useDestinations";
+import { useDashboardDestinations } from "@/hooks/useDestinations";
 import { useRecommendedEvents } from "@/hooks/useEvents";
 import { format, formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
-// ALL_DESTINATIONS removed - now fetched from Supabase via useDestinations hook
+// ============================================================================
+// Skeleton components for loading states
+// ============================================================================
+const DestinationSkeleton = () => (
+  <Card className="overflow-hidden animate-pulse border-primary/10">
+    <div className="h-28 bg-muted" />
+  </Card>
+);
 
+const EventSkeleton = () => (
+  <div className="flex gap-3 animate-pulse">
+    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted" />
+    <div className="flex-1 space-y-2">
+      <div className="h-3 bg-muted rounded w-3/4" />
+      <div className="h-2 bg-muted rounded w-1/2" />
+      <div className="h-2 bg-muted rounded w-1/3" />
+    </div>
+  </div>
+);
+
+// ============================================================================
+// Dashboard Component
+// ============================================================================
 const Dashboard = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
@@ -32,27 +53,32 @@ const Dashboard = () => {
   const { data: allTrips } = useTrips();
   const { data: tripStats } = useTripStats();
   const { data: transactionStats } = useTransactionStats();
-  const { data: destinations, isLoading: isLoadingDestinations } = usePublishedDestinations();
+  const { data: destinations, isLoading: isLoadingDestinations } = useDashboardDestinations(6);
   const { t } = useTranslation();
 
   const userName = profile?.full_name?.split(' ')[0] || 'Traveler';
   const hasPreferences = profile?.travel_preferences && profile.travel_preferences.length > 0;
 
-  // Active Trips for "Your Travel Goals"
-  const activeTrips = allTrips?.filter(t => t.status === 'active').slice(0, 2) || [];
+  // Memoized computations — prevent recalculation on unrelated re-renders
+  const activeTrips = useMemo(
+    () => allTrips?.filter(t => t.status === 'active').slice(0, 2) || [],
+    [allTrips]
+  );
 
-  // Completed Trips for "Recent Bookings"
-  const recentBookings = allTrips?.filter(t => t.status === 'completed').slice(0, 2).map(t => ({
-    destination: t.destination,
-    date: t.updated_at ? format(new Date(t.updated_at), "MMM d, yyyy") : format(new Date(), "MMM d, yyyy"),
-    status: t.status === 'completed' ? 'Completed' : 'Active'
-  })) || [];
+  const recentBookings = useMemo(
+    () => allTrips?.filter(t => t.status === 'completed').slice(0, 2).map(t => ({
+      destination: t.destination,
+      date: t.updated_at ? format(new Date(t.updated_at), "MMM d, yyyy") : format(new Date(), "MMM d, yyyy"),
+      status: t.status === 'completed' ? 'Completed' : 'Active'
+    })) || [],
+    [allTrips]
+  );
 
-  // Recommended Events Logic (Personalized)
-  const { data: recommendedEvents, isLoading: isLoadingEvents } = useRecommendedEvents();
+  // Recommended Events
+  const { data: recommendedEvents, isLoading: isLoadingEvents, error: eventsError } = useRecommendedEvents();
 
-  // Filter featured destinations
-  const featuredDestinations = (() => {
+  // Featured destinations — score by user preference match
+  const featuredDestinations = useMemo(() => {
     if (!destinations) return [];
     const prefs = profile?.travel_preferences || [];
     if (prefs.length === 0) return destinations.slice(0, 3);
@@ -64,13 +90,13 @@ const Dashboard = () => {
       }))
       .sort((a, b) => b.matchCount - a.matchCount)
       .slice(0, 3);
-  })();
+  }, [destinations, profile?.travel_preferences]);
 
-  const nextTripInfo = (() => {
+  const nextTripInfo = useMemo(() => {
     if (!activeTrips.length) return "No trips";
     const sorted = [...activeTrips].sort((a, b) => new Date(a.target_date).getTime() - new Date(b.target_date).getTime());
     return formatDistanceToNow(new Date(sorted[0].target_date), { addSuffix: false });
-  })();
+  }, [activeTrips]);
 
   const quickActions = [
     { icon: faPlus, label: t('dashboard.addSavingsGoal'), link: "/travel-goals" },
@@ -170,18 +196,18 @@ const Dashboard = () => {
                   <div className="p-1.5 bg-primary/10 rounded-lg">
                     <FontAwesomeIcon icon={faStar} className="h-4 w-4 text-primary" />
                   </div>
-                  <h2 className="text-lg font-bold">Your Travel Goals</h2>
+                  <h2 className="text-lg font-bold">{t('dashboard.yourTravelGoals')}</h2>
                 </div>
                 <Link to="/travel-goals">
                   <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary hover:bg-primary/10 transition-colors">
-                    View All →
+                    {t('common.viewAll')} →
                   </Button>
                 </Link>
               </div>
 
               <div className="space-y-4 relative z-10">
                 {activeTrips.length > 0 ? (
-                  activeTrips.map((trip, index) => (
+                  activeTrips.map((trip) => (
                     <div key={trip.id} className="transform transition-all duration-300 hover:scale-[1.01]">
                       <TripCard
                         id={trip.id}
@@ -218,15 +244,23 @@ const Dashboard = () => {
               </div>
               <div className="grid md:grid-cols-3 gap-3">
                 {isLoadingDestinations ? (
-                  <div className="col-span-full flex justify-center py-12">
-                    <FontAwesomeIcon icon={faSpinner} className="h-8 w-8 animate-spin text-primary" />
-                  </div>
+                  <>
+                    <DestinationSkeleton />
+                    <DestinationSkeleton />
+                    <DestinationSkeleton />
+                  </>
                 ) : (
                   featuredDestinations.map((dest, index) => (
                     <Link key={index} to="/travel-goals" state={{ destination: dest }}>
                       <Card className="overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300 border-primary/10">
                         <div className="relative h-28 overflow-hidden">
-                          <img src={dest.image_url || heroBeach} alt={dest.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <img
+                            src={dest.image_url || heroBeach}
+                            alt={dest.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                            decoding="async"
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                           <div className="absolute bottom-2 left-3 right-3 flex justify-between items-end text-white">
                             <h3 className="font-bold text-sm truncate mr-2">{dest.name}</h3>
@@ -248,15 +282,22 @@ const Dashboard = () => {
                   <FontAwesomeIcon icon={faCalendarDays} className="h-5 w-5 text-primary" />
                   <h2 className="text-base font-bold">{t('dashboard.upcomingEvents')}</h2>
                 </div>
-                <Badge variant="secondary" className="text-[10px] font-bold">For You</Badge>
+                <Badge variant="secondary" className="text-[10px] font-bold">{t('dashboard.forYou', 'For You')}</Badge>
               </div>
               <div className="space-y-4">
                 {isLoadingEvents ? (
-                  <div className="flex justify-center py-6">
-                    <FontAwesomeIcon icon={faSpinner} className="h-5 w-5 animate-spin text-primary" />
+                  <>
+                    <EventSkeleton />
+                    <EventSkeleton />
+                    <EventSkeleton />
+                  </>
+                ) : eventsError ? (
+                  <div className="text-center py-6">
+                    <FontAwesomeIcon icon={faTriangleExclamation} className="h-5 w-5 text-destructive mb-2" />
+                    <p className="text-[10px] text-muted-foreground">Unable to load events. Please try again later.</p>
                   </div>
                 ) : (recommendedEvents || []).length > 0 ? (
-                  recommendedEvents?.map((event, index) => (
+                  recommendedEvents?.map((event) => (
                     <div key={event.id} className="group cursor-pointer">
                       <div className="flex gap-3">
                         <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/5 flex flex-col items-center justify-center border border-primary/10">
@@ -282,12 +323,13 @@ const Dashboard = () => {
                   ))
                 ) : (
                   <div className="text-center py-6">
-                    <p className="text-[10px] text-muted-foreground">No events recommended yet.</p>
+                    <FontAwesomeIcon icon={faCalendarDays} className="h-8 w-8 text-muted-foreground/20 mb-2" />
+                    <p className="text-[10px] text-muted-foreground">No upcoming events at the moment. Check back soon!</p>
                   </div>
                 )}
               </div>
               <Button variant="ghost" className="w-full mt-4 h-8 text-xs text-muted-foreground hover:text-primary transition-colors">
-                Discover More Events
+                {t('dashboard.discoverMoreEvents', 'Discover More Events')}
               </Button>
             </Card>
 
@@ -298,8 +340,6 @@ const Dashboard = () => {
                   <Link key={index} to={action.link}>
                     <Button variant="outline" className="w-full justify-start text-xs h-8" size="sm">
                       <FontAwesomeIcon icon={action.icon} className="h-3 w-3 mr-2 text-muted-foreground" />
-                      {/* We're using action.label which is hardcoded in quickActions array. 
-                          We should ideally translate that array too, but it's defined inside component. */}
                       {action.label}
                     </Button>
                   </Link>
@@ -323,7 +363,7 @@ const Dashboard = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-muted-foreground">No completed bookings yet.</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.noBookingsYet', 'No completed bookings yet.')}</p>
                 )}
               </div>
             </Card>

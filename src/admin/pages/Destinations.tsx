@@ -325,7 +325,7 @@ export default function DestinationsManagement() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Optimistic update helper
     const optimisticUpdate = useCallback((id: string, updates: Partial<Destination>) => {

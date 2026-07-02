@@ -70,7 +70,6 @@ const Auth = () => {
     resetAllFields();
     setCurrentTab("login");
     setSignupSuccess(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
 
   // If already logged in, redirect immediately based on role
@@ -97,19 +96,64 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Client-side validation
+    const trimmedEmail = loginEmail.trim();
+    if (!trimmedEmail) {
+      toast({
+        title: t('common.error'),
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      toast({
+        title: t('common.error'),
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!loginPassword) {
+      toast({
+        title: t('common.error'),
+        description: "Please enter your password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       // signIn returns role and redirectTo immediately
-      const { error, role, redirectTo } = await signIn(loginEmail, loginPassword);
+      const { error, role, redirectTo } = await signIn(trimmedEmail, loginPassword);
 
       if (error) {
+        // Show a clear, user-friendly message for invalid credentials
+        const msg = error.message?.toLowerCase() || '';
+        const isCredentialError =
+          msg.includes('invalid') ||
+          msg.includes('credentials') ||
+          msg.includes('password') ||
+          msg.includes('not found') ||
+          msg.includes('email');
+
         toast({
-          title: t('common.error'),
-          description: error.message,
+          title: "Login Failed",
+          description: isCredentialError
+            ? "Incorrect email address or password."
+            : error.message,
           variant: "destructive",
         });
-        resetAllFields();
+        // Only clear the password, keep email so user doesn't have to retype it
+        setLoginPassword("");
+        setShowPassword(false);
         setIsLoading(false);
         return;
       }
@@ -156,11 +200,22 @@ const Auth = () => {
       return;
     }
 
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(signupEmail.trim())) {
+      toast({
+        title: t('common.error'),
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const fullPhone = `${countryCode}${phone}`;
-      const { error } = await signUp(signupEmail, password, fullName, fullPhone, idNumber);
+      const { error, session: newSession } = await signUp(signupEmail.trim(), password, fullName, fullPhone, idNumber);
 
       if (error) {
         if (error.message.toLowerCase().includes("already registered") ||
@@ -181,7 +236,17 @@ const Auth = () => {
           variant: "destructive",
         });
         resetAllFields();
+      } else if (newSession) {
+        // Auto-confirmed: user is logged in immediately with profile already populated
+        toast({
+          title: "Account created successfully! 🎉",
+          description: `Welcome aboard, ${fullName || 'Traveler'}!`,
+        });
+        resetAllFields();
+        // Redirect to dashboard — profile data is already in AuthContext
+        navigate('/dashboard', { replace: true });
       } else {
+        // Email confirmation required
         toast({
           title: t('auth.signupSuccess'),
           description: t('auth.verificationDesc', { email: signupEmail }),

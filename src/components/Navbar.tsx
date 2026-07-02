@@ -7,7 +7,7 @@ import {
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import ReviewDialog, { hasAlreadyReviewed } from "@/components/ReviewDialog";
+import ReviewDialog, { shouldPromptForReview } from "@/components/ReviewDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -204,9 +204,11 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
       return;
     }
 
-    // Check if user has already submitted a review (localStorage fast-path + DB fallback)
-    const reviewed = await hasAlreadyReviewed(user.id);
-    if (!reviewed) {
+    // Check if user should see the review prompt:
+    // - Has NOT already submitted a review
+    // - Account is old enough (has navigated the platform)
+    const shouldPrompt = await shouldPromptForReview(user.id, profile?.created_at);
+    if (shouldPrompt) {
       // Show review popup; actual logout happens after user submits/skips (onDone)
       setPendingLogout(true);
       setShowReviewDialog(true);

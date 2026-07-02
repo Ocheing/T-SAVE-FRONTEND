@@ -158,5 +158,8 @@ export function useTripStats() {
             };
         },
         enabled: !!user,
+        staleTime: CACHE_CONFIG.staleTime,
+        gcTime: CACHE_CONFIG.gcTime,
+        refetchOnWindowFocus: false,
     });
 }

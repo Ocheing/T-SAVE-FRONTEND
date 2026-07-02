@@ -43,6 +43,26 @@ async function hasAlreadyReviewed(userId: string): Promise<boolean> {
     return false;
 }
 
+/**
+ * Determines whether the user should be shown the review prompt on logout.
+ * Conditions:
+ *  1. User has NOT already submitted a review.
+ *  2. User has "navigated through the platform" — account is at least 2 minutes old.
+ *     This prevents brand-new sign-ups from being prompted immediately.
+ */
+async function shouldPromptForReview(userId: string, accountCreatedAt?: string | null): Promise<boolean> {
+    // If the account was just created (less than 2 minutes ago), skip the prompt
+    if (accountCreatedAt) {
+        const ageMs = Date.now() - new Date(accountCreatedAt).getTime();
+        const TWO_MINUTES = 2 * 60 * 1000;
+        if (ageMs < TWO_MINUTES) return false;
+    }
+
+    // Check if they've already reviewed
+    const reviewed = await hasAlreadyReviewed(userId);
+    return !reviewed;
+}
+
 interface ReviewDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -151,5 +171,5 @@ const ReviewDialog = ({ open, onOpenChange, onDone }: ReviewDialogProps) => {
     );
 };
 
-export { ReviewDialog, hasAlreadyReviewed, getReviewKey };
+export { ReviewDialog, hasAlreadyReviewed, shouldPromptForReview, getReviewKey };
 export default ReviewDialog;

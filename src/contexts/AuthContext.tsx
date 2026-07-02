@@ -21,7 +21,7 @@ interface AuthContextType {
     isSuperAdmin: boolean;
     isLoading: boolean;
     isInitialized: boolean;
-    signUp: (email: string, password: string, fullName?: string, phone?: string, idNumber?: string) => Promise<{ error: AuthError | null }>;
+    signUp: (email: string, password: string, fullName?: string, phone?: string, idNumber?: string) => Promise<{ error: AuthError | null; user: User | null; session: Session | null }>;
     signIn: (email: string, password: string) => Promise<SignInResult>;
     signInWithGoogle: () => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [fetchUserData]);
 
     const signUp = async (email: string, password: string, fullName?: string, phone?: string, idNumber?: string) => {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -242,7 +242,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 },
             },
         });
-        return { error };
+
+        if (!error && data?.user && data?.session) {
+            // Auto-login succeeded (email confirmation disabled or auto-confirm enabled)
+            // Immediately set session + user so the profile is available without refresh
+            setSession(data.session);
+            setUser(data.user);
+
+            // The DB trigger handle_new_user() has already created the profile row.
+            // Fetch it now so the profile state is populated immediately.
+            const profileData = await fetchProfile(data.user.id);
+            const role = await fetchAdminRole(data.user.id);
+            setProfile(profileData);
+            setAdminRole(role);
+
+            // Signal that we already populated user data
+            manualSignInRef.current = true;
+        }
+
+        return { error, user: data?.user ?? null, session: data?.session ?? null };
     };
 
     /**

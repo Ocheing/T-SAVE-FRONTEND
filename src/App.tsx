@@ -155,14 +155,13 @@ const App = () => {
     queryClientRef.current = new QueryClient({
       defaultOptions: {
         queries: {
-          // staleTime=0 means data is always considered stale → fetches on mount
-          // Individual hooks override this with their own staleTime where appropriate
-          staleTime: 0,
+          // staleTime=60s means data is fresh for a minute, preventing layout shifts across route changes
+          staleTime: 1000 * 60,
           gcTime: 1000 * 60 * 30, // 30 minutes
           retry: 2,
           retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
           refetchOnWindowFocus: false,
-          refetchOnMount: true,
+          refetchOnMount: false, // Don't refetch on mount if data is not stale
         },
       },
     });

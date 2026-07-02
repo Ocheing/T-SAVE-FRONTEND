@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { User, Mail, Phone, MapPin, Settings, LogOut, CreditCard, Globe, Bell, DollarSign, Loader2, Save, Camera, Smartphone, Building, Plus, Trash2, Star, Check, Receipt, Shield, CheckCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { validateKenyanPhone, KENYAN_BANKS } from "@/lib/paymentService";
+import ReviewDialog, { shouldPromptForReview } from "@/components/ReviewDialog";
 
 // Comprehensive list of world currencies
 const CURRENCIES = [
@@ -119,6 +120,8 @@ const Profile = () => {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [paymentFormError, setPaymentFormError] = useState<string | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [pendingLogout, setPendingLogout] = useState(false);
   const [newPayment, setNewPayment] = useState({
     type: 'mpesa' as 'mpesa' | 'card' | 'bank',
     name: '',
@@ -133,8 +136,10 @@ const Profile = () => {
 
   // Auto-populate form data when profile loads
   useEffect(() => {
-    if (profile) {
-      let extractedPhone = profile.phone || '';
+    // Prefer the useProfile query data (most up-to-date from DB)
+    const source = profile || authProfile;
+    if (source) {
+      let extractedPhone = source.phone || '';
       let extractedCode = "+254";
 
       const codes = ["+254", "+255", "+256", "+250", "+251", "+971", "+44", "+1"];
@@ -147,25 +152,20 @@ const Profile = () => {
       }
 
       setFormData({
-        full_name: profile.full_name || '',
+        full_name: source.full_name || '',
         phone: extractedPhone,
-        id_number: profile.id_number || '',
-        location: profile.location || '',
-        language: profile.language || 'en',
-        currency: profile.currency || 'kes',
-        email_notifications: profile.email_notifications ?? true,
-        trip_reminders: profile.trip_reminders ?? true,
-        savings_milestones: profile.savings_milestones ?? true,
+        id_number: source.id_number || '',
+        location: source.location || '',
+        language: source.language || 'en',
+        currency: source.currency || 'kes',
+        email_notifications: source.email_notifications ?? true,
+        trip_reminders: source.trip_reminders ?? true,
+        savings_milestones: source.savings_milestones ?? true,
       });
       setCountryCode(extractedCode);
-      if (profile.avatar_url) {
-        setAvatarPreview(profile.avatar_url);
+      if (source.avatar_url) {
+        setAvatarPreview(source.avatar_url);
       }
-    } else if (authProfile) {
-      setFormData(prev => ({
-        ...prev,
-        full_name: authProfile.full_name || '',
-      }));
     }
   }, [profile, authProfile]);
 
@@ -211,13 +211,33 @@ const Profile = () => {
     }
   };
 
+  const doSignOut = useCallback(async () => {
+    setPendingLogout(false);
+    try {
+      await signOut();
+    } finally {
+      navigate('/', { replace: true });
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+    }
+  }, [signOut, navigate, toast]);
+
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
+    if (!user) {
+      await doSignOut();
+      return;
+    }
+
+    // Check if user should see the review prompt
+    const shouldPrompt = await shouldPromptForReview(user.id, (profile || authProfile)?.created_at);
+    if (shouldPrompt) {
+      setPendingLogout(true);
+      setShowReviewDialog(true);
+    } else {
+      await doSignOut();
+    }
   };
 
   const resetPaymentForm = () => {
@@ -961,6 +981,15 @@ const Profile = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Review Dialog — shown once on first logout, before signing out */}
+        <ReviewDialog
+          open={showReviewDialog}
+          onOpenChange={setShowReviewDialog}
+          onDone={() => {
+            if (pendingLogout) doSignOut();
+          }}
+        />
       </div>
     </div>
   );

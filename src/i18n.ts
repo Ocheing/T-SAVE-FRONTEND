@@ -126,7 +126,11 @@ const resources = {
                 createFirstGoal: "Create your first goal",
                 takeQuiz: "Take a Quiz",
                 designHolidays: "Design your holidays",
-                quizDescription: "Fill out the survey to get the best recommendations tailored to your unique style."
+                quizDescription: "Fill out the survey to get the best recommendations tailored to your unique style.",
+                forYou: "For You",
+                discoverMoreEvents: "Discover More Events",
+                noBookingsYet: "No completed bookings yet.",
+                noEventsYet: "No events recommended yet."
             },
             // Trips/Goals
             trips: {
@@ -407,7 +411,11 @@ const resources = {
                 createFirstGoal: "Créez votre premier objectif",
                 takeQuiz: "Faire le quiz",
                 designHolidays: "Concevez vos vacances",
-                quizDescription: "Remplissez le sondage pour obtenir les meilleures recommandations adaptées à votre style."
+                quizDescription: "Remplissez le sondage pour obtenir les meilleures recommandations adaptées à votre style.",
+                forYou: "Pour Vous",
+                discoverMoreEvents: "Découvrir Plus d'Événements",
+                noBookingsYet: "Aucune réservation terminée.",
+                noEventsYet: "Aucun événement recommandé."
             },
             trips: {
                 browseTrips: "Parcourir les voyages",
@@ -677,7 +685,11 @@ const resources = {
                 createFirstGoal: "Unda lengo lako la kwanza",
                 takeQuiz: "Fanya Jaribio",
                 designHolidays: "Buni likizo yako",
-                quizDescription: "Jaza utafiti kupata mapendekezo bora yanayofaa mtindo wako."
+                quizDescription: "Jaza utafiti kupata mapendekezo bora yanayofaa mtindo wako.",
+                forYou: "Kwa Ajili Yako",
+                discoverMoreEvents: "Gundua Matukio Zaidi",
+                noBookingsYet: "Hakuna uhifadhi uliokamilika bado.",
+                noEventsYet: "Hakuna matukio yaliyopendekezwa bado."
             },
             trips: {
                 browseTrips: "Angalia Safari",

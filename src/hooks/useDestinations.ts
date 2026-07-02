@@ -10,6 +10,7 @@ export const DESTINATIONS_QUERY_KEYS = {
     featured: ['destinations', 'featured'] as const,
     popular: ['destinations', 'popular'] as const,
     published: ['destinations', 'published'] as const,
+    dashboard: ['destinations', 'dashboard'] as const,
 };
 
 // Use stable module-level state but with proper cleanup support
@@ -53,6 +54,7 @@ export function useDestinationsRealtime() {
                             globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.featured });
                             globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.popular });
                             globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.published });
+                            globalQueryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEYS.dashboard });
                         }, 150);
                     }
                 )
@@ -169,6 +171,32 @@ export function usePopularDestinations() {
         },
         staleTime: 1000 * 60,
         gcTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: false,
+    });
+}
+
+/**
+ * Lightweight hook for Dashboard featured destinations.
+ * Fetches only required fields with a small limit for fast rendering.
+ */
+export function useDashboardDestinations(limit = 6) {
+    useDestinationsRealtime();
+
+    return useQuery({
+        queryKey: [...DESTINATIONS_QUERY_KEYS.dashboard, limit],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('destinations')
+                .select('id, name, image_url, estimated_cost, categories, location')
+                .eq('status', 'published')
+                .order('rating', { ascending: false })
+                .limit(limit);
+
+            if (error) throw error;
+            return data as Pick<Destination, 'id' | 'name' | 'image_url' | 'estimated_cost' | 'categories' | 'location'>[];
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes — destinations rarely change mid-session
+        gcTime: 1000 * 60 * 30,
         refetchOnWindowFocus: false,
     });
 }

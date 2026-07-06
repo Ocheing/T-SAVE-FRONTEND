@@ -71,28 +71,28 @@ const Destinations = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
-      <section className="relative py-20 px-4 overflow-hidden">
+      <section className="relative py-12 md:py-16 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-        <div className="absolute top-10 right-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-10 right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
         <div className="container mx-auto max-w-4xl text-center relative z-10 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
-            <Sparkles className="h-4 w-4" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-4">
+            <Sparkles className="h-3 w-3" />
             Explore Before You Sign Up
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
             Discover Your Next <span className="text-primary">Adventure</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Browse stunning destinations, compare budgets, and find your dream trip — no account needed to explore.
           </p>
 
           {/* Search Bar */}
           <div className="max-w-xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search destinations, cities, or countries..."
-              className="h-12 pl-12 pr-4 text-base rounded-full bg-card/80 border-white/10 backdrop-blur-sm"
+              className="h-10 pl-10 pr-4 text-sm rounded-full bg-card/80 border-white/10 backdrop-blur-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -101,7 +101,7 @@ const Destinations = () => {
       </section>
 
       {/* Filters + Grid */}
-      <section className="container mx-auto px-4 pb-20">
+      <section className="container mx-auto px-4 pb-16">
         {/* Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2 mb-8 animate-fade-in">
           <SlidersHorizontal className="h-4 w-4 text-muted-foreground mr-1" />
@@ -157,7 +157,7 @@ const Destinations = () => {
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
                 {/* Image */}
-                <div className="relative h-56 overflow-hidden">
+                <div className="relative h-48 overflow-hidden">
                   <img
                     src={dest.image_url || heroBeach}
                     alt={dest.name}
@@ -190,16 +190,16 @@ const Destinations = () => {
                   {/* Price overlay */}
                   <div className="absolute bottom-3 right-3">
                     <span className="text-xs text-white/70">From </span>
-                    <span className="text-lg font-bold text-white">
+                    <span className="text-base font-bold text-white">
                       {formatPriceFromKES(Number(dest.estimated_cost))}
                     </span>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-5 space-y-3">
+                <div className="p-4 space-y-2">
                   <div>
-                    <h3 className="text-lg font-bold mb-0.5 group-hover:text-primary transition-colors">
+                    <h3 className="text-base font-bold mb-0.5 group-hover:text-primary transition-colors">
                       {dest.name}
                     </h3>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -267,19 +267,19 @@ const Destinations = () => {
 
       {/* CTA for non-authed users */}
       {!user && (
-        <section className="py-20 bg-primary">
+        <section className="py-12 md:py-16 bg-primary">
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-3xl mx-auto animate-fade-in">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Found Your Dream Destination?
               </h2>
-              <p className="text-xl text-white/90 mb-8">
+              <p className="text-lg text-white/90 mb-6">
                 Create a free account to start saving, track your progress, and book your trip when you're ready.
               </p>
               <Button
                 variant="secondary"
-                size="lg"
-                className="text-lg"
+                size="default"
+                className="text-base"
                 onClick={() => navigate("/auth")}
               >
                 Create Free Account

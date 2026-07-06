@@ -52,36 +52,36 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-28 px-4 overflow-hidden">
+      <section className="relative py-16 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-        <div className="absolute top-10 right-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-60 h-60 bg-primary/3 rounded-full blur-3xl" />
+        <div className="absolute top-10 right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-10 w-48 h-48 bg-primary/3 rounded-full blur-3xl" />
 
         <div className="container mx-auto max-w-4xl text-center relative z-10 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
-            <Sparkles className="h-4 w-4" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-4">
+            <Sparkles className="h-3 w-3" />
             Our Story
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
             About <span className="text-primary">TembeaSave</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Empowering travelers to reach their dream destinations through smart, secure, and rewarding savings.
           </p>
         </div>
       </section>
 
       {/* Mission Section — Image + Text */}
-      <section className="container mx-auto px-4 pb-20">
+      <section className="container mx-auto px-4 pb-16">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
             {/* Image Side */}
             <div className="relative animate-scale-in order-2 lg:order-1">
               <div className="rounded-3xl overflow-hidden shadow-[var(--shadow-elegant)] relative group">
                 <img
                   src={heroBeach}
                   alt="Dream travel destination"
-                  className="w-full h-[420px] object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-[320px] object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 {/* Floating stats overlay */}
@@ -100,18 +100,18 @@ const AboutUs = () => {
                 </div>
               </div>
               {/* Floating logo badge */}
-              <div className="absolute -top-5 -right-5 w-20 h-20 rounded-2xl bg-card border border-white/10 shadow-xl flex items-center justify-center animate-float">
-                <img src={logo} alt="TembeaSave" className="w-14 h-14 rounded-full" />
+              <div className="absolute -top-5 -right-5 w-16 h-16 rounded-2xl bg-card border border-white/10 shadow-xl flex items-center justify-center animate-float">
+                <img src={logo} alt="TembeaSave" className="w-10 h-10 rounded-full" />
               </div>
             </div>
 
             {/* Text Side */}
             <div className="space-y-6 animate-fade-in order-1 lg:order-2">
-              <h2 className="text-3xl md:text-4xl font-bold">Our Mission</h2>
-              <p className="text-muted-foreground text-lg leading-relaxed">
+              <h2 className="text-2xl md:text-3xl font-bold">Our Mission</h2>
+              <p className="text-muted-foreground text-base leading-relaxed">
                 At TembeaSave, we believe that travel should be accessible to everyone. Our platform provides a secure, intuitive, and rewarding way to plan, save, and embark on the journeys of your dreams.
               </p>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground text-base leading-relaxed">
                 We replace financial stress with excitement, turning the daunting task of saving for a trip into a fun, trackable, and motivating experience. Every shilling counts, and we make sure each one brings you closer to paradise.
               </p>
 
@@ -125,7 +125,7 @@ const AboutUs = () => {
               </div>
 
               <Link to="/how-it-works" className="inline-block pt-2">
-                <Button variant="hero" size="lg" className="px-6">
+                <Button variant="hero" size="default" className="px-6">
                   See How It Works
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -136,11 +136,11 @@ const AboutUs = () => {
       </section>
 
       {/* Values Grid */}
-      <section className="py-20 bg-card/30">
+      <section className="py-16 bg-card/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-14 animate-fade-in">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What We Stand For</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <div className="text-center mb-10 animate-fade-in">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">What We Stand For</h2>
+            <p className="text-muted-foreground text-base max-w-2xl mx-auto">
               Our core values shape every feature we build and every experience we create.
             </p>
           </div>
@@ -149,13 +149,13 @@ const AboutUs = () => {
             {values.map((value, index) => (
               <Card
                 key={value.title}
-                className="p-6 text-center space-y-4 hover:shadow-[var(--shadow-elegant)] transition-all duration-500 hover:-translate-y-2 border-white/5 animate-fade-in"
+                className="p-5 text-center space-y-3 hover:shadow-[var(--shadow-elegant)] transition-all duration-500 hover:-translate-y-2 border-white/5 animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="w-14 h-14 mx-auto bg-primary/12 rounded-2xl flex items-center justify-center text-primary border border-primary/10">
-                  <value.icon className="w-7 h-7" />
+                <div className="w-12 h-12 mx-auto bg-primary/12 rounded-2xl flex items-center justify-center text-primary border border-primary/10">
+                  <value.icon className="w-6 h-6" />
                 </div>
-                <h3 className="font-bold text-lg">{value.title}</h3>
+                <h3 className="font-bold text-base">{value.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{value.description}</p>
               </Card>
             ))}
@@ -164,28 +164,28 @@ const AboutUs = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-r from-primary to-primary/80">
+      <section className="py-16 bg-gradient-to-r from-primary to-primary/80">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Ready to Start Your Journey?
             </h2>
-            <p className="text-xl text-white/90 mb-10">
+            <p className="text-lg text-white/90 mb-8">
               Join thousands of travelers saving smart with TembeaSave. Your dream trip is closer than you think.
             </p>
             {isInitialized && (
               user ? (
                 <Link to="/dashboard">
-                  <Button variant="secondary" size="lg" className="text-lg px-8">
+                  <Button variant="secondary" size="default" className="text-base px-6">
                     Go to Dashboard
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               ) : (
                 <Link to="/auth">
-                  <Button variant="secondary" size="lg" className="text-lg px-8">
+                  <Button variant="secondary" size="default" className="text-base px-6">
                     Get Started Today
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               )

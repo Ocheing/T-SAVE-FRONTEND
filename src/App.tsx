@@ -77,7 +77,7 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       {/* Scroll to top on every navigation */}
       <ScrollRestoration />
-      {!hideNavbar && <Navbar onThemeToggle={toggleTheme} isDark={isDark} isHomePage={isHomePage} />}
+      {!hideNavbar && <Navbar onThemeToggle={toggleTheme} isDark={isDark} />}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}

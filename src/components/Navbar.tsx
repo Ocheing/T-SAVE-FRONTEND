@@ -5,7 +5,7 @@ import {
   faReceipt, faLanguage, faMoneyBill, faShieldHalved, faLocationDot, faBars,
 } from '@fortawesome/free-solid-svg-icons';
 import { Button } from "./ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ReviewDialog, { shouldPromptForReview } from "@/components/ReviewDialog";
 import {
@@ -27,7 +27,6 @@ import logo from "@/assets/tembeasave-logo.png";
 interface NavbarProps {
   onThemeToggle: () => void;
   isDark: boolean;
-  isHomePage?: boolean;
 }
 
 import { useCurrency, CURRENCIES } from "@/contexts/CurrencyContext";
@@ -35,8 +34,10 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { LANGUAGES } from "@/contexts/LanguageContext";
 
-const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
+const Navbar = ({ onThemeToggle, isDark }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  const isActive = (path: string) => location.pathname === path;
   const { t, i18n } = useTranslation();
   const { currency, setCurrency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
@@ -154,26 +155,24 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links — homepage only */}
-          {isHomePage && (
-            <div className="hidden md:flex items-center gap-1">
-              <Link to="/how-it-works">
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                  How It Works
-                </Button>
-              </Link>
-              <Link to="/destinations">
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                  Destinations
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                  About
-                </Button>
-              </Link>
-            </div>
-          )}
+          {/* Desktop Navigation Links */}
+          <div className="hidden md:flex items-center gap-1">
+            <Link to="/how-it-works">
+              <Button variant="ghost" size="sm" className={`text-xs ${isActive('/how-it-works') ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground hover:text-foreground'}`}>
+                How It Works
+              </Button>
+            </Link>
+            <Link to="/destinations">
+              <Button variant="ghost" size="sm" className={`text-xs ${isActive('/destinations') ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground hover:text-foreground'}`}>
+                Destinations
+              </Button>
+            </Link>
+            <Link to="/about">
+              <Button variant="ghost" size="sm" className={`text-xs ${isActive('/about') ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground hover:text-foreground'}`}>
+                About
+              </Button>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-2">
             {/* Language & Currency Dropdown */}
@@ -360,62 +359,58 @@ const Navbar = ({ onThemeToggle, isDark, isHomePage = false }: NavbarProps) => {
                 </select>
               </div>
 
-              {/* Public Nav Links — homepage only */}
-              {isHomePage && (
-                <>
-                  <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                      How It Works
-                    </Button>
-                  </Link>
-                  <Link to="/destinations" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                      <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3 mr-2" />
-                      Destinations
-                    </Button>
-                  </Link>
-                  <Link to="/about" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                      About
-                    </Button>
-                  </Link>
-                </>
-              )}
+              {/* Public Nav Links */}
+              <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/how-it-works') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
+                  How It Works
+                </Button>
+              </Link>
+              <Link to="/destinations" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/destinations') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
+                  <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3 mr-2" />
+                  Destinations
+                </Button>
+              </Link>
+              <Link to="/about" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/about') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
+                  About
+                </Button>
+              </Link>
 
               <div className="border-t border-white/5 my-1" />
 
               <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/dashboard') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
                   <FontAwesomeIcon icon={faGaugeHigh} className="h-3 w-3 mr-2" />
                   {t('nav.dashboard')}
                 </Button>
               </Link>
               <Link to="/trips" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/trips') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
                   <FontAwesomeIcon icon={faPlane} className="h-3 w-3 mr-2" />
                   {t('nav.trips')}
                 </Button>
               </Link>
               <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/wishlist') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
                   <FontAwesomeIcon icon={faHeart} className="h-3 w-3 mr-2" />
                   {t('nav.wishlist')}
                 </Button>
               </Link>
               <Link to="/bookings" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/bookings') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
                   <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 mr-2" />
                   {t('nav.bookings')}
                 </Button>
               </Link>
               <Link to="/chat" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/chat') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
                   <FontAwesomeIcon icon={faRobot} className="h-3 w-3 mr-2" />
                   {t('nav.chat')}
                 </Button>
               </Link>
               <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/profile') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
                   <FontAwesomeIcon icon={faUser} className="h-3 w-3 mr-2" />
                   {t('nav.profile')}
                 </Button>

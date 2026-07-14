@@ -167,6 +167,11 @@ const Navbar = ({ onThemeToggle, isDark }: NavbarProps) => {
                 Destinations
               </Button>
             </Link>
+            <Link to="/events">
+              <Button variant="ghost" size="sm" className={`text-xs ${isActive('/events') ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground hover:text-foreground'}`}>
+                Events
+              </Button>
+            </Link>
             <Link to="/about">
               <Button variant="ghost" size="sm" className={`text-xs ${isActive('/about') ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground hover:text-foreground'}`}>
                 About
@@ -369,6 +374,12 @@ const Navbar = ({ onThemeToggle, isDark }: NavbarProps) => {
                 <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/destinations') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
                   <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3 mr-2" />
                   Destinations
+                </Button>
+              </Link>
+              <Link to="/events" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className={`w-full justify-start text-xs ${isActive('/events') ? 'text-primary font-semibold bg-primary/10' : ''}`}>
+                  <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 mr-2" />
+                  Events
                 </Button>
               </Link>
               <Link to="/about" onClick={() => setIsMenuOpen(false)}>

@@ -21,13 +21,3 @@ ALTER TABLE public.events
 -- Add participant capacity
 ALTER TABLE public.events
     ADD COLUMN IF NOT EXISTS max_participants integer;
-
--- Backfill start_date from existing event_date for any rows that already exist
-UPDATE public.events
-SET start_date = event_date::date
-WHERE start_date IS NULL AND event_date IS NOT NULL;
-
--- ============================================================================
--- Enable Supabase Realtime for events table
--- ============================================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE public.events;

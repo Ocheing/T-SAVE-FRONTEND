@@ -7,7 +7,8 @@ import {
     Settings,
     LogOut,
     ShieldCheck,
-    Plane
+    Plane,
+    CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ const navItems = [
     { icon: LayoutDashboard, labelKey: "nav.dashboard", href: "/admin/dashboard" },
     { icon: Users, labelKey: "admin.usersManagement", href: "/admin/users" },
     { icon: MapPin, labelKey: "admin.destinationsManagement", href: "/admin/destinations" },
+    { icon: CalendarDays, labelKey: "Events Management", href: "/admin/events" },
     { icon: BarChart3, labelKey: "admin.analytics", href: "/admin/analytics" },
     { icon: Settings, labelKey: "common.settings", href: "/admin/settings" },
 ];

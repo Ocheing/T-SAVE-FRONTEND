@@ -328,9 +328,11 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
-              <Button variant="ghost" className="w-full mt-4 h-8 text-xs text-muted-foreground hover:text-primary transition-colors">
-                {t('dashboard.discoverMoreEvents', 'Discover More Events')}
-              </Button>
+              <Link to="/events">
+                <Button variant="ghost" className="w-full mt-4 h-8 text-xs text-muted-foreground hover:text-primary transition-colors">
+                  {t('dashboard.discoverMoreEvents', 'Discover More Events')}
+                </Button>
+              </Link>
             </Card>
 
             <Card className="p-4">

@@ -34,6 +34,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const HelpCentre = lazy(() => import("./pages/HelpCentre"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Destinations = lazy(() => import("./pages/Destinations"));
+const UpcomingEvents = lazy(() => import("./pages/UpcomingEvents"));
 
 
 // Admin Imports - Lazy loaded
@@ -41,6 +42,7 @@ const AdminLayout = lazy(() => import("./admin/components/AdminLayout"));
 const AdminDashboard = lazy(() => import("./admin/pages/Dashboard"));
 const UsersManagement = lazy(() => import("./admin/pages/Users"));
 const DestinationsManagement = lazy(() => import("./admin/pages/Destinations"));
+const EventsManagement = lazy(() => import("./admin/pages/Events"));
 const Analytics = lazy(() => import("./admin/pages/Analytics"));
 const AdminSettings = lazy(() => import("./admin/pages/Settings"));
 const AdminSetup = lazy(() => import("./admin/pages/AdminSetup"));
@@ -90,6 +92,7 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
           <Route path="/help" element={<HelpCentre />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/destinations" element={<Destinations />} />
+          <Route path="/events" element={<UpcomingEvents />} />
 
           {/* Auth Routes - Unified login for all users */}
           <Route path="/auth" element={<Auth />} />
@@ -118,6 +121,7 @@ const AppContent = ({ isDark, toggleTheme }: { isDark: boolean; toggleTheme: () 
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<UsersManagement />} />
             <Route path="destinations" element={<DestinationsManagement />} />
+            <Route path="events" element={<EventsManagement />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

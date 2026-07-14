@@ -5,12 +5,12 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: true,
     port: 8080,
   },
   preview: {
     // SPA routing: serve index.html for all routes in `vite preview`
-    host: "::",
+    host: true,
     port: 8080,
   },
   // Explicit cache location — easy to clear: remove node_modules/.vite

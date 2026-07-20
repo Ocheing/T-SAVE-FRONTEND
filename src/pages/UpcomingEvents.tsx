@@ -323,24 +323,39 @@ const UpcomingEvents = () => {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="hero"
-                        size="sm"
-                        className="flex-1 text-xs"
-                        onClick={() => handleAuthAction("book", event)}
-                      >
-                        Book Now
-                        <ArrowRight className="ml-1 h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => handleAuthAction("save", event)}
-                      >
-                        Save
-                      </Button>
+                    <div className="flex flex-col gap-2 pt-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => handleAuthAction("book", event)}
+                        >
+                          Book Now
+                          <ArrowRight className="ml-1 h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleAuthAction("save", event)}
+                        >
+                          Save
+                        </Button>
+                      </div>
+                      {event.website_url && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full text-xs bg-secondary/50 hover:bg-secondary border border-white/5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(event.website_url, '_blank', 'noopener,noreferrer');
+                          }}
+                        >
+                          Visit Event Website
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </Card>

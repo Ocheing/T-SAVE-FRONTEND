@@ -35,19 +35,16 @@ export default function AdminDashboard() {
     const fetchStats = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [usersRes, tripsRes, transactionsRes, recentUsersRes] = await Promise.all([
+            const [usersRes, tripsRes, transactionsRes, recentUsersRes, activeTripsRes] = await Promise.all([
                 supabase.from('profiles').select('id', { count: 'exact' }),
                 supabase.from('trips').select('id', { count: 'exact' }),
                 supabase.from('transactions').select('amount'),
-                supabase.from('profiles').select('id, email, full_name, created_at').order('created_at', { ascending: false }).limit(5)
+                supabase.from('profiles').select('id, email, full_name, created_at').order('created_at', { ascending: false }).limit(5),
+                supabase.from('trips').select('id', { count: 'exact' }).eq('status', 'active')
             ]);
 
             const totalRevenue = (transactionsRes.data as { amount: number }[] | null)?.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || 0;
-
-            const { count: activeCount } = await supabase
-                .from('trips')
-                .select('id', { count: 'exact' })
-                .eq('status', 'active');
+            const activeCount = activeTripsRes.count;
 
             setStats({
                 totalUsers: usersRes.count || 0,

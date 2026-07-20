@@ -109,9 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchingRef.current = true;
 
         try {
-            // Fetch profile and role sequentially to prevent Web Lock timeouts
-            const profileData = await fetchProfile(userId);
-            const role = await fetchAdminRole(userId);
+            // Fetch profile and role concurrently for faster initialization
+            const [profileData, role] = await Promise.all([
+                fetchProfile(userId),
+                fetchAdminRole(userId)
+            ]);
 
             setProfile(profileData);
             setAdminRole(role);
@@ -250,9 +252,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(data.user);
 
             // The DB trigger handle_new_user() has already created the profile row.
-            // Fetch it now so the profile state is populated immediately.
-            const profileData = await fetchProfile(data.user.id);
-            const role = await fetchAdminRole(data.user.id);
+            // Fetch it concurrently now so the profile state is populated immediately.
+            const [profileData, role] = await Promise.all([
+                fetchProfile(data.user.id),
+                fetchAdminRole(data.user.id)
+            ]);
             setProfile(profileData);
             setAdminRole(role);
 
@@ -286,9 +290,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(data.session);
             setUser(data.user);
 
-            // Fetch profile and role sequentially to prevent Web Lock timeouts
-            const profileData = await fetchProfile(data.user.id);
-            const role = await fetchAdminRole(data.user.id);
+            // Fetch profile and role concurrently for faster initialization
+            const [profileData, role] = await Promise.all([
+                fetchProfile(data.user.id),
+                fetchAdminRole(data.user.id)
+            ]);
 
             // Update all state at once so the dashboard has everything on first render
             setProfile(profileData);

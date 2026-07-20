@@ -167,6 +167,20 @@ export default function ViewEventModal({
                         </Card>
                     )}
 
+                    {/* Website */}
+                    {event.website_url && (
+                        <Card className="p-4 bg-muted/30 flex items-center justify-between">
+                            <div>
+                                <h3 className="font-semibold mb-1">Event Website</h3>
+                                <p className="text-muted-foreground text-sm">
+                                    <a href={event.website_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                        {event.website_url}
+                                    </a>
+                                </p>
+                            </div>
+                        </Card>
+                    )}
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <Card className="p-4 text-center">

@@ -339,6 +339,7 @@ export type Database = {
                     start_time: string | null
                     end_time: string | null
                     max_participants: number | null
+                    website_url: string | null
                     created_at: string | null
                     updated_at: string | null
                 }
@@ -362,6 +363,7 @@ export type Database = {
                     start_time?: string | null
                     end_time?: string | null
                     max_participants?: number | null
+                    website_url?: string | null
                     created_at?: string | null
                     updated_at?: string | null
                 }
@@ -385,6 +387,7 @@ export type Database = {
                     start_time?: string | null
                     end_time?: string | null
                     max_participants?: number | null
+                    website_url?: string | null
                     created_at?: string | null
                     updated_at?: string | null
                 }

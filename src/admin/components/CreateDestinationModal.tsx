@@ -135,14 +135,16 @@ export default function CreateDestinationModal({
         onOpenChange(false);
     }, [isSubmitting, isUploading, resetForm, onOpenChange]);
 
+    const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
     const handleImageUpload = useCallback(
         async (event: React.ChangeEvent<HTMLInputElement>) => {
             const file = event.target.files?.[0];
             if (!file) return;
 
-            // Validate file type
-            if (!file.type.startsWith("image/")) {
-                toast.error("Please select an image file");
+            // Strict format validation
+            if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+                toast.error("Unsupported format. Please select a JPG, PNG, or WebP image.");
                 return;
             }
 
@@ -156,7 +158,7 @@ export default function CreateDestinationModal({
             setUploadProgress(10);
 
             try {
-                // Show immediate preview while compressing
+                // Show immediate local preview while uploading
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setImagePreview(reader.result as string);
@@ -176,7 +178,7 @@ export default function CreateDestinationModal({
 
                 // Create a unique file name
                 const fileExt = "jpg"; // We always convert to jpg after compression
-                const fileName = `destination_${Date.now()}.${fileExt}`;
+                const fileName = `destination_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
                 const filePath = `destinations/${fileName}`;
 
                 // Upload to Supabase Storage
@@ -191,15 +193,18 @@ export default function CreateDestinationModal({
 
                 if (uploadError) {
                     console.error("Upload error:", uploadError);
-                    toast.info(
-                        "Using local preview - configure storage bucket for permanent uploads"
+                    toast.error(
+                        `Image upload failed: ${uploadError.message}. Please check your storage bucket configuration.`
                     );
+                    // Clear the temporary local preview and form data so a broken URL is never saved
+                    setImagePreview(null);
+                    setFormData((prev) => ({ ...prev, image_url: "" }));
+                    setUploadProgress(0);
                     setIsUploading(false);
-                    setUploadProgress(100);
                     return;
                 }
 
-                // Get public URL
+                // Success: replace local preview with permanent public URL
                 const {
                     data: { publicUrl },
                 } = supabase.storage.from("images").getPublicUrl(filePath);
@@ -210,7 +215,10 @@ export default function CreateDestinationModal({
                 toast.success("Image uploaded successfully");
             } catch (error) {
                 console.error("Upload error:", error);
-                toast.info("Using local preview for image");
+                toast.error("Image upload failed. Please try again.");
+                setImagePreview(null);
+                setFormData((prev) => ({ ...prev, image_url: "" }));
+                setUploadProgress(0);
             } finally {
                 // Delay hiding progress for better UX
                 setTimeout(() => {
@@ -417,9 +425,10 @@ export default function CreateDestinationModal({
                                             {isUploading ? (
                                                 <>
                                                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                                    <p className="text-sm text-muted-foreground mt-2">
-                                                        Compressing & uploading...
-                                                    </p>
+                                                    <div className="w-3/4 mt-3">
+                                                        <Progress value={uploadProgress} className="h-2" />
+                                                        <p className="text-xs text-muted-foreground text-center mt-1">Uploading... {uploadProgress}%</p>
+                                                    </div>
                                                 </>
                                             ) : (
                                                 <>
@@ -428,7 +437,7 @@ export default function CreateDestinationModal({
                                                         Click to upload or drag and drop
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        PNG, JPG up to 10MB (auto-compressed)
+                                                        JPG, PNG, WebP up to 10MB (auto-compressed)
                                                     </p>
                                                 </>
                                             )}
@@ -436,7 +445,7 @@ export default function CreateDestinationModal({
                                         <input
                                             type="file"
                                             className="hidden"
-                                            accept="image/*"
+                                            accept="image/jpeg,image/png,image/webp"
                                             onChange={handleImageUpload}
                                             disabled={isUploading}
                                         />

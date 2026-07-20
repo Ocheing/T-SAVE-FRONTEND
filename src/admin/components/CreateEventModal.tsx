@@ -49,6 +49,7 @@ interface EventFormData {
     name: string;
     location: string;
     description: string;
+    website_url: string;
     categories: string[];
     price: string;
     image_url: string;
@@ -81,6 +82,7 @@ const initialFormData: EventFormData = {
     name: "",
     location: "",
     description: "",
+    website_url: "",
     categories: [],
     price: "",
     image_url: "",
@@ -135,13 +137,16 @@ export default function CreateEventModal({
         onOpenChange(false);
     }, [isSubmitting, isUploading, resetForm, onOpenChange]);
 
+    const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
     const handleImageUpload = useCallback(
         async (event: React.ChangeEvent<HTMLInputElement>) => {
             const file = event.target.files?.[0];
             if (!file) return;
 
-            if (!file.type.startsWith("image/")) {
-                toast.error("Please select an image file");
+            // Strict format validation
+            if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+                toast.error("Unsupported format. Please select a JPG, PNG, or WebP image.");
                 return;
             }
 
@@ -154,6 +159,7 @@ export default function CreateEventModal({
             setUploadProgress(10);
 
             try {
+                // Show immediate local preview while uploading
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setImagePreview(reader.result as string);
@@ -171,7 +177,7 @@ export default function CreateEventModal({
                 setUploadProgress(50);
 
                 const fileExt = "jpg";
-                const fileName = `event_${Date.now()}.${fileExt}`;
+                const fileName = `event_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
                 const filePath = `events/${fileName}`;
 
                 const { error: uploadError } = await supabase.storage
@@ -185,14 +191,18 @@ export default function CreateEventModal({
 
                 if (uploadError) {
                     console.error("Upload error:", uploadError);
-                    toast.info(
-                        "Using local preview - configure storage bucket for permanent uploads"
+                    toast.error(
+                        `Image upload failed: ${uploadError.message}. Please check your storage bucket configuration.`
                     );
+                    // Clear the temporary local preview and form data so a broken URL is never saved
+                    setImagePreview(null);
+                    setFormData((prev) => ({ ...prev, image_url: "" }));
+                    setUploadProgress(0);
                     setIsUploading(false);
-                    setUploadProgress(100);
                     return;
                 }
 
+                // Success: replace local preview with permanent public URL
                 const {
                     data: { publicUrl },
                 } = supabase.storage.from("images").getPublicUrl(filePath);
@@ -203,7 +213,10 @@ export default function CreateEventModal({
                 toast.success("Image uploaded successfully");
             } catch (error) {
                 console.error("Upload error:", error);
-                toast.info("Using local preview for image");
+                toast.error("Image upload failed. Please try again.");
+                setImagePreview(null);
+                setFormData((prev) => ({ ...prev, image_url: "" }));
+                setUploadProgress(0);
             } finally {
                 setTimeout(() => {
                     setIsUploading(false);
@@ -265,6 +278,16 @@ export default function CreateEventModal({
             toast.error("Event name is required");
             return;
         }
+        if (!formData.website_url.trim()) {
+            toast.error("Event website link is required");
+            return;
+        }
+        try {
+            new URL(formData.website_url.trim());
+        } catch {
+            toast.error("Please enter a valid website URL (include http:// or https://)");
+            return;
+        }
         if (!formData.price || parseFloat(formData.price) < 0) {
             toast.error("Please enter a valid price");
             return;
@@ -282,6 +305,7 @@ export default function CreateEventModal({
                 name: formData.name.trim(),
                 location: formData.location.trim() || "",
                 description: formData.description.trim() || null,
+                website_url: formData.website_url.trim(),
                 categories: formData.categories.length > 0 ? formData.categories : null,
                 price: parseFloat(formData.price),
                 image_url: formData.image_url || null,
@@ -400,18 +424,25 @@ export default function CreateEventModal({
                                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
                                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                             {isUploading ? (
-                                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                                <>
+                                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                                    <div className="w-3/4 mt-3">
+                                                        <Progress value={uploadProgress} className="h-2" />
+                                                        <p className="text-xs text-muted-foreground text-center mt-1">Uploading... {uploadProgress}%</p>
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <>
                                                     <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                                                     <p className="text-sm text-muted-foreground">Click to upload image</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP up to 10MB</p>
                                                 </>
                                             )}
                                         </div>
                                         <input
                                             type="file"
                                             className="hidden"
-                                            accept="image/*"
+                                            accept="image/jpeg,image/png,image/webp"
                                             onChange={handleImageUpload}
                                             disabled={isUploading}
                                         />
@@ -450,6 +481,19 @@ export default function CreateEventModal({
                                     disabled={isSubmitting}
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="website_url">Event Website Link <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="website_url"
+                                type="url"
+                                placeholder="e.g., https://example.com/tickets"
+                                value={formData.website_url}
+                                onChange={(e) => updateField("website_url", e.target.value)}
+                                required
+                                disabled={isSubmitting}
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

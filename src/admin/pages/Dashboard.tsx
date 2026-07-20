@@ -151,7 +151,9 @@ export default function AdminDashboard() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{isLoading ? "---" : stat.value}</div>
+                            <div className="text-2xl font-bold">
+                                {isLoading ? <div className="h-8 w-24 bg-muted rounded animate-pulse" /> : stat.value}
+                            </div>
                             <div className="flex items-center mt-1">
                                 {stat.trendUp ? (
                                     <ArrowUpRight className="h-4 w-4 text-emerald-500 mr-1" />
@@ -198,10 +200,10 @@ export default function AdminDashboard() {
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <div key={i} className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
+                                        <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
                                         <div className="flex-1 space-y-2">
-                                            <div className="h-4 bg-muted animate-pulse rounded w-24"></div>
-                                            <div className="h-3 bg-muted animate-pulse rounded w-32"></div>
+                                            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                                            <div className="h-3 w-48 bg-muted rounded animate-pulse" />
                                         </div>
                                     </div>
                                 ))

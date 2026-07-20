@@ -130,6 +130,11 @@ const Auth = () => {
 
     setIsLoading(true);
 
+    // Optimistically prefetch admin chunks in the background while authenticating
+    // to ensure zero network lag if the user turns out to be an admin.
+    import("@/admin/components/AdminLayout").catch(() => {});
+    import("@/admin/pages/Dashboard").catch(() => {});
+
     try {
       // signIn returns role and redirectTo immediately
       const { error, role, redirectTo } = await signIn(trimmedEmail, loginPassword);
